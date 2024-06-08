@@ -1,0 +1,11 @@
+[Unit]
+Description=restart DE
+
+[Service]
+User=root
+ExecStart=/bin/bash /usr/bin/switch-DEs.sh
+Restart=never
+
+[Install]
+WantedBy=multi-user.target
+

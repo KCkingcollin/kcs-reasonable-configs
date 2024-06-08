@@ -1,0 +1,225 @@
+// -*- mode: jsonc -*-
+{
+    // "layer": "top", // Waybar at top layer
+    // "position": "bottom", // Waybar position (top|bottom|left|right)
+    "height": 15, // Waybar height (to be removed for auto height)
+    // "width": 1280, // Waybar width
+    "spacing": 0,// Gaps between modules (4px)
+    // Choose the order of the modules
+    "modules-left": [
+        "hyprland/language",
+        //"temperature",
+        "hyprland/workspaces",
+        "custom/playerprev",
+        "custom/media",
+        "custom/playernext",
+        "privacy",
+    ],
+    "modules-center": [
+        "custom/notification",
+        "clock",
+    ],
+    "modules-right": [
+        "tray",
+        "pulseaudio",
+        "bluetooth",
+        "network",
+        "cpu",
+        "backlight",
+        "battery",
+        "battery#bat2",
+        "memory",
+    ],
+
+    "hyprland/language": {
+        "format": "{short} {variant}",
+        "on-click": "hyprctl switchxkblayout at-translated-set-2-keyboard next",
+    },
+
+    "bluetooth": {
+    // "controller": "controller1", // specify the alias of the controller if there are more than 1 on the system
+    "format": " {status}",
+    "format-disabled": " off", // an empty format will hide the module
+    "format-connected": " {num_connections}",
+    "tooltip-format": "{controller_alias}\t{controller_address}",
+    "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{device_enumerate}",
+    "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+    "on-click": "blueman-manager",
+    },
+
+//     Modules configuration
+"hyprland/workspaces": {
+    "disable-scroll": true,
+    "all-outputs": true,
+    "warp-on-scroll": false,
+    "format": "{name}",
+    "format-icons": {
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": "",
+        "6": "",
+        "7": "",
+        "8": "",
+        "9": "",
+        "10": "",
+        "urgent": "",
+        "focused": "",
+        "default": ""
+    }
+},
+"tray": {
+    "format": "{}"
+},
+"clock": {
+    "timezone": "America/New_York",
+    "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+    "format": "{:%d-%m-%Y %H:%M}",
+    "on-click": "flatpak run org.mozilla.firefox --new-window https://calendar.proton.me/"
+},
+"cpu": {
+    "format": "{usage}% `",
+    "tooltip": false
+},
+"memory": {
+    "format": "{}% `"
+},
+"temperature": {
+        // "thermal-zone": 2,
+        // "hwmon-path": "/sys/class/hwmon/hwmon2/temp1_input",
+        "critical-threshold": 80,
+        // "format-critical": "{temperatureC}°C {icon}",
+        "format": "{temperatureC}°C {icon}",
+        "format-icons": ["", "", ""]
+},
+"backlight": {
+        // "device": "acpi_video1",
+        "format": "{percent}% {icon}`",
+        "format-icons": ["", "", "", "", "", "", "", "", ""]
+},
+"battery": {
+    "states": {
+            // "good": 95,
+            "warning": 30,
+            "critical": 15
+    },
+    "format": "{capacity}% {icon}` ",
+    "format-full": "{capacity}% {icon}`",
+    "format-charging": "{capacity}% ",
+    "format-plugged": "{capacity}% ",
+    "format-alt": "{time} {icon}` ",
+        // "format-good": "", // An empty format will hide the module
+        // "format-full": "",
+        "format-icons": ["", "", "", "", ""]
+},
+"battery#bat2": {
+    "bat": "BAT2"
+},
+"power-profiles-daemon": {
+    "format": "{icon}",
+    "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+    "tooltip": true,
+    "format-icons": {
+        "default": "",
+        "performance": "",
+        "balanced": "",
+        "power-saver": ""
+    }
+},
+"network": {
+        // "interface": "wlp2*", // (Optional) To force the use of this interface
+        //"format-wifi": "{essid} ({signalStrength}%) ",
+        //"format-ethernet": "{ipaddr}/{cidr} ",
+        "format-wifi": "{essid} `",
+        "format-ethernet": "",
+        "tooltip-format": "{ifname} via {gwaddr} ",
+        "format-linked": "(No IP) ",
+        "format-disconnected": "⚠",
+//        "format-alt": "{ifname}: {ipaddr}/{cidr}",
+"on-click": "nm-connection-editor"
+},
+"pulseaudio": {
+        // "scroll-step": 1, // %, can be a float
+        "format": "{volume}% {icon} {format_source}",
+        "format-bluetooth": "{volume}% {icon} {format_source}",
+        "format-bluetooth-muted": " {icon} {format_source}",
+        "format-muted": " {format_source}",
+        "format-source": "",
+        "format-source-muted": "",
+        "format-icons": {
+            "headphone": "",
+            "hands-free": "",
+            "headset": "",
+            "phone": "",
+            "portable": "",
+            "car": "",
+            "default": ["", "", " "]
+        },
+        "on-click": "pavucontrol"
+},
+"custom/media": {
+    "format": "{}",
+    "max-length": 30,
+    "tooltip": false,
+    "exec": "$HOME/.config/waybar/mediaplayer.sh", 
+    "on-click": "playerctl play-pause",
+        //"restart-interval": 30,
+},
+"custom/playernext": {
+    "format": " ",
+    "on-click": "playerctl next",
+    "tooltip": false,
+    "exec": "$HOME/.config/waybar/playerctl.sh", 
+        //"restart-interval": 30,
+},
+"custom/playerprev": {
+    "format": " ",
+    "on-click": "playerctl previous",
+    "tooltip": false,
+    "exec": "$HOME/.config/waybar/playerctl.sh", 
+        //"restart-interval": 30,
+},
+"privacy": {
+    //"icon-spacing": 0,
+    //"icon-size": 18,
+    //"transition-duration": 250,
+    "modules": [
+        {
+            "type": "screenshare",
+            "tooltip": true,
+            //"tooltip-icon-size": 0
+        },
+        {
+            "type": "audio-out",
+            "tooltip": true,
+            //"tooltip-icon-size": 0
+        },
+        {
+            "type": "audio-in",
+            "tooltip": true,
+            //"tooltip-icon-size": 0
+        }
+    ]
+},
+"custom/notification": {
+    "tooltip": false,
+    "format": "{icon}",
+    "format-icons": {
+        "notification": "<span foreground='red'><sup></sup></span>",
+        "none": "",
+        "dnd-notification": "<span foreground='red'><sup></sup></span>",
+        "dnd-none": "",
+        "inhibited-notification": "<span foreground='red'><sup></sup></span>",
+        "inhibited-none": "",
+        "dnd-inhibited-notification": "<span foreground='red'><sup></sup></span>",
+        "dnd-inhibited-none": ""
+    },
+    "return-type": "json",
+    "exec-if": "which swaync-client",
+    "exec": "swaync-client -swb",
+    "on-click": "swaync-client -t -sw",
+    "on-click-right": "swaync-client -d -sw",
+    "escape": true
+},
+}
