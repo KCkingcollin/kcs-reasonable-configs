@@ -13,6 +13,7 @@ then
         passwd $accountName
         groupadd sudo
         usermod -aG sudo $accountName
+        chown -r $accountName:$accountName ./* 
         if [ "$(cat /etc/sudoers | grep -o -m 1 "# %sudo")" = "# %sudo" ]
         then
             echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
@@ -69,6 +70,8 @@ mv "$HOME/.icons" "$HOME/.icons.bac"
 mv "$HOME/.gtkrc-2.0" "$HOME/.gtkrc-2.0.bac" 
 
 location="$(pwd)"
+
+mkdir $HOME/.config
 
 sudo chmod +x "$location"/switch-DEs.sh
 
