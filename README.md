@@ -39,6 +39,7 @@ chmod +x ./Install.sh
 
 
 Thats it really, Just select hyprland at login and login normaly.
+
 note: Depending on the previous DE, you might get drooped into a black screen. DON'T PANIC, just press Ctrl+Alt+F1 or try F2-F9 if F1 doesn't show the gdm login.
 
 ### Dependencies
