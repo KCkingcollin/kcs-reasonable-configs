@@ -96,7 +96,7 @@ sudo -S cp -rf "$location"/switch-DEs.sh /usr/bin/
 
 sudo -S cp -rf "$location"/switch-DEs.service /etc/systemd/system/
 
-yes | cp -rf "$location"/after.sh /"$HOME"/hypr/
+yes | cp -rf "$location"/after.sh /"$HOME"/.config/hypr/
 
 mv /"$HOME"/.config/hypr/hyprland.conf /"$HOME"/.config/hypr/hyprland.conf.bac
 
