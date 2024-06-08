@@ -2,7 +2,7 @@
 
 if [ $USER = 'root' ]
 then
-    pacman -Syyu --noconfirm sudo hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4
+    pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4
     echo "You need to run this script as a sudo user NOT as root"
     echo "Create a new account?"
     read -p "[Y/n]: " answer
@@ -38,7 +38,7 @@ then
         return
     fi
 else
-    sudo -S pacman -Syyu --noconfirm sudo hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4
+    sudo -S pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4
 fi
 
 if [ "$(pacman -Q | grep -o -m 1 yay)" != "yay" ];
@@ -53,7 +53,8 @@ then
     cd ..
 fi
 
-yay -S --noconfirm hyprshot nvim-packer-git hy3-git oh-my-zsh-git hyprland-git hyprland-plugin-hyprbars-git nwg-shell
+# yay -S --noconfirm hyprshot nvim-packer-git hy3-git oh-my-zsh-git hyprland-git hyprland-plugin-hyprbars-git nwg-shell
+yay -S --noconfirm hyprshot nvim-packer-git oh-my-zsh-git nwg-shell
 
 sudo -S flatpak -y remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
 sudo -S flatpak -y install org.mozilla.firefox/x86_64/stable
@@ -91,9 +92,15 @@ yes | cp -rf "$location"/nvim "$location"/foot "$location"/hypr "$location"/wayb
 
 yes | cp -rf "$location"/.zshrc "$location"/.themes "$location"/.icons "$location"/.gtkrc-2.0 "$HOME/"
 
-sudo -S cp -r "$location"/switch-DEs.sh /usr/bin/
+sudo -S cp -rf "$location"/switch-DEs.sh /usr/bin/
 
-sudo -S cp -r "$location"/switch-DEs.service /etc/systemd/system/
+sudo -S cp -rf "$location"/switch-DEs.service /etc/systemd/system/
+
+sudo -S cp -rf "$location"/after.sh /"$HOME"/hypr/
+
+mv /"$HOME"/.config/hypr/hyprland.conf /"$HOME"/.config/hypr/hyprland.conf.bac
+
+sudo -S cp -rf "$location"/hyprland.conf.temp /"$HOME"/.config/hypr/hyprland.conf
 
 sudo -S chsh -s /bin/zsh $USER
 

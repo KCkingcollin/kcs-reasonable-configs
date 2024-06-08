@@ -43,6 +43,7 @@ note: Depending on the previous DE, you might get drooped into a black screen. D
 #### Arch repos
 (I didn't check which repos, most likely a lot is in the extra repo)
 ```
+hyprland
 hyprpaper
 waybar
 swaync
@@ -69,15 +70,12 @@ gtk4
 ```
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term
 ```
-sudo pacman -S hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git cpio meson cmake npm gtk2 gtk3 gtk4
+sudo pacman -S hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git cpio meson cmake npm gtk2 gtk3 gtk4
 ```
 
 
 #### AUR
 ```
-hyprland-git
-hyprland-plugin-hyprbars-git
-hy3-git
 hyprshot
 nvim-packer-git
 oh-my-zsh-git
@@ -87,19 +85,27 @@ nwg-shell
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term
 (You'll need to install [yay](https://github.com/Jguer/yay) to use this command)
 ```
-yay -S hyprshot nvim-packer-git oh-my-zsh-git hyprland-git hyprland-plugin-hyprbars-git hy3-git nwg-shell
+yay -S hyprshot nvim-packer-git oh-my-zsh-git nwg-shell
 ```
 
-~~#### Hyprpm~~ 
-~~```~~
-~~hyprbars~~
-~~```~~
-~~Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term:~~
-~~```~~
-~~hyprpm add https://github.com/hyprwm/hyprland-plugins~~
-~~hyprpm enable hyprbars~~
-~~```~~
-
+#### Hyprpm 
+```
+hy3
+hyprbars
+```
+Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term:
+```
+hyprpm update
+hyprpm add https://github.com/hyprwm/hyprland-plugins
+hyprpm add add https://github.com/outfoxxed/hy3
+hyprpm enable hyprbars
+hyprpm enable hy3
+```
+note: if hyprpm throws an error when updating run:
+```
+sudo rm -r ~/Hyprland/ 
+git clone https://github.com/hyprwm/Hyprland.git 
+```
 
 #### Other/optional
 I personally use these, but they can be changed in ``~/.config/hypr/custom/settings.conf`` under "VARIABLES".
