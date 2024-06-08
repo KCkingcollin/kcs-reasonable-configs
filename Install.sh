@@ -1,6 +1,26 @@
 #!/bin/bash
 
-sudo pacman -Syyu --noconfirm sudo hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4
+if [ $USER = 'root' ]
+then
+    pacman -Syyu --noconfirm sudo hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4
+    echo "You need to run this script as a user with sudo NOT as root"
+    echo "Create a new account?"
+    read -p "[Y/n]: " answer
+    if [ "$(echo "$answer" | grep -o "y")" = "y" ]
+    then
+        read -p "Name of the account?: " accountName
+        adduser $accountName
+        passwd $accountName
+        usermod -aG sudo $accountName
+        echo "%sudo	ALL=(ALL:ALL) ALL" >> ~/etc/sudoers 
+        echo "Please login to the new user with [su $accountName]"
+        exit
+    else
+        exit
+    fi
+else
+    sudo pacman -Syyu --noconfirm sudo hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4
+fi
 
 if [ "$(pacman -Q | grep -o -m 1 yay)" != "yay" ];
 then
