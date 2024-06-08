@@ -44,6 +44,7 @@ note: Depending on the previous DE, you might get drooped into a black screen. D
 (I didn't check which repos, most likely a lot is in the extra repo)
 ```
 hyprland
+hyprwayland-scanner
 hyprpaper
 waybar
 swaync
@@ -70,7 +71,7 @@ gtk4
 ```
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term
 ```
-sudo pacman -S hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git cpio meson cmake npm gtk2 gtk3 gtk4
+sudo pacman -S hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git cpio meson cmake npm gtk2 gtk3 gtk4 hyprwayland-scanner
 ```
 
 
