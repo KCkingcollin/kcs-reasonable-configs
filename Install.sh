@@ -15,7 +15,7 @@ then
         usermod -aG sudo $accountName
         if [ $(cat /etc/sudoers | grep -m 1 "# %sudo") = "# %sudo" ]
         then
-            echo "%sudo	ALL=(ALL:ALL) ALL" >> /etc/sudoers 
+            echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
         fi
         echo "Please login to the new user with [su $accountName]"
         exit
