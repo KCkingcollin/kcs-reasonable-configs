@@ -21,6 +21,7 @@ then
         then
             echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
         fi
+        clear
         echo "Please login to the new user and cd into the new repo [cd /home/$accountName/kcs-reasonable-configs]"
         echo "logging out in"
         sleep 1
