@@ -46,8 +46,8 @@ fi
 
 yay -S --noconfirm hyprshot nvim-packer-git hy3-git oh-my-zsh-git hyprland-git hyprland-plugin-hyprbars-git nwg-shell
 
-flatpak -y remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
-flatpak -y install org.mozilla.firefox/x86_64/stable
+sudo flatpak -y remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
+sudo flatpak -y install org.mozilla.firefox/x86_64/stable
 sudo flatpak override --filesystem="$HOME"/.themes
 sudo flatpak override --filesystem="$HOME"/.icons
 sudo flatpak override --filesystem="$HOME"/.gtkrc-2.0
@@ -77,8 +77,6 @@ mv "$HOME/.gtkrc-2.0" "$HOME/.gtkrc-2.0.bac"
 location="$(pwd)"
 
 mkdir $HOME/.config
-
-sudo chmod +x "$location"/switch-DEs.sh
 
 yes | cp -rf "$location"/nvim "$location"/foot "$location"/hypr "$location"/waybar "$location"/swaync "$location"/rofi "$HOME/.config/"
 
