@@ -20,7 +20,7 @@ then
         cd "/home/$accountName"
         sudo -S -i -u $accountName git clone https://github.com/KCkingcollin/kcs-reasonable-configs
         cd "/home/$accountName/kcs-reasonable-configs"
-        su -c "source Install.sh" $accountName
+        su -c "./Install.sh" $accountName
         return
     else
         read -p "Username?: " accountName
@@ -34,7 +34,7 @@ then
         sudo -S -i -u $accountName git clone https://github.com/KCkingcollin/kcs-reasonable-configs
         cd "/home/$accountName/kcs-reasonable-configs"
         su $accountName
-        su -c "source Install.sh" $accountName
+        su -c "./Install.sh" $accountName
         return
     fi
 else
