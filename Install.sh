@@ -21,7 +21,7 @@ then
         then
             echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
         fi
-        echo "Please login to the new user with [su $accountName]"
+        echo "Please login to the new user with [su $accountName] and cd to the new clone in your home dir with [cd /home/$accountName/kcs-reasonable-configs]"
         exit
     else
         exit
