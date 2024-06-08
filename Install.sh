@@ -15,7 +15,7 @@ then
         usermod -aG sudo $accountName
         cd "/home/$accountName"
         sudo -i -u $accountName git clone https://github.com/KCkingcollin/kcs-reasonable-configs
-        cd "/home/$$accountName/kcs-reasonable-configs"
+        cd "/home/$accountName/kcs-reasonable-configs"
         chmod +x Install.sh
         if [ "$(cat /etc/sudoers | grep -o -m 1 "# %sudo")" = "# %sudo" ]
         then
