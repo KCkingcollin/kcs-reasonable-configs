@@ -13,31 +13,20 @@ then
         passwd $accountName
         groupadd sudo
         usermod -aG sudo $accountName
-        cd "/home/$accountName"
-        sudo -i -u $accountName git clone https://github.com/KCkingcollin/kcs-reasonable-configs
-        cd "/home/$accountName/kcs-reasonable-configs"
-        chmod +x Install.sh
         if [ "$(cat /etc/sudoers | grep -o -m 1 "# %sudo")" = "# %sudo" ]
         then
             echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
         fi
-        clear
-        echo "Please login to the new user and cd into the new repo [cd /home/$accountName/kcs-reasonable-configs]"
-        echo "logging out in"
-        sleep 1
-        echo "5"
-        sleep 1
-        echo "4"
-        sleep 1
-        echo "3"
-        sleep 1
-        echo "2"
-        sleep 1
-        echo "1"
-        sleep 1
-        exit
+        su $accountName
+        cd "$HOME/"
+        git clone https://github.com/KCkingcollin/kcs-reasonable-configs
+        cd kcs-reasonable-configs
     else
-        exit
+        read -p "Username?: " accountName
+        su $accountName
+        cd "$HOME/"
+        git clone https://github.com/KCkingcollin/kcs-reasonable-configs
+        cd kcs-reasonable-configs
     fi
 else
     sudo pacman -Syyu --noconfirm sudo hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4
