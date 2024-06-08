@@ -11,6 +11,7 @@ then
         read -p "Name of the account?: " accountName
         useradd $accountName
         passwd $accountName
+        groupadd sudo
         usermod -aG sudo $accountName
         if [ $(cat /etc/sudoers | grep -m 1 "# %sudo") = "# %sudo" ]
         then
