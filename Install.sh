@@ -6,14 +6,14 @@ then
     echo "You need to run this script as a user with sudo NOT as root"
     echo "Create a new account?"
     read -p "[Y/n]: " answer
-    if [ "$(echo "$answer" | grep -o "y")" = "y" ]
+    if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]
     then
         read -p "Name of the account?: " accountName
         useradd $accountName
         passwd $accountName
         groupadd sudo
         usermod -aG sudo $accountName
-        if [ $(cat /etc/sudoers | grep -m 1 "# %sudo") = "# %sudo" ]
+        if [ $(cat /etc/sudoers | grep -o -m 1 "# %sudo") = "# %sudo" ]
         then
             echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
         fi
@@ -48,7 +48,7 @@ sudo flatpak override --filesystem="$HOME"/.gtkrc-2.0
 sudo flatpak override --env=GTK_THEME=Adwaita-dark
 sudo flatpak override --env=ICON_THEME=Adwaita-dark
 
-if [ $(git status | grep -m 1 "On branch main") != "On branch main" ]
+if [ $(git status | grep -o -m 1 "On branch main") != "On branch main" ]
 then
     if [ "$(ls | grep -o -m 1 "kcs-reasonable-configs")" = "kcs-reasonable-configs" ];
     then 
