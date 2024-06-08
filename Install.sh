@@ -20,7 +20,8 @@ then
         cd "/home/$accountName"
         sudo -i -u $accountName git clone https://github.com/KCkingcollin/kcs-reasonable-configs
         cd "/home/$accountName/kcs-reasonable-configs"
-        su $accountName
+        su -c "source Install.sh" $accountName
+        return
     else
         read -p "Username?: " accountName
         groupadd sudo
@@ -33,6 +34,8 @@ then
         sudo -i -u $accountName git clone https://github.com/KCkingcollin/kcs-reasonable-configs
         cd "/home/$accountName/kcs-reasonable-configs"
         su $accountName
+        su -c "source Install.sh" $accountName
+        return
     fi
 else
     sudo pacman -Syyu --noconfirm sudo hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4
