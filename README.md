@@ -81,12 +81,13 @@ hyprshot
 nvim-packer-git
 oh-my-zsh-git
 nwg-shell
+pamac-all
 ```
 
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term
 (You'll need to install [yay](https://github.com/Jguer/yay) to use this command)
 ```
-yay -S hyprshot nvim-packer-git oh-my-zsh-git nwg-shell
+yay -S hyprshot nvim-packer-git oh-my-zsh-git nwg-shell pamac-all
 ```
 
 #### Hyprpm 
