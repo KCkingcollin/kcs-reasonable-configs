@@ -13,7 +13,10 @@ then
         passwd $accountName
         groupadd sudo
         usermod -aG sudo $accountName
-        chown -R $accountName:$accountName ./* 
+        cd "/home/$accountName"
+        sudo -i -u $accountName git clone https://github.com/KCkingcollin/kcs-reasonable-configs
+        cd kcs-reasonable-configs
+        chmod +x Install.sh
         if [ "$(cat /etc/sudoers | grep -o -m 1 "# %sudo")" = "# %sudo" ]
         then
             echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
@@ -49,7 +52,7 @@ sudo flatpak override --filesystem="$HOME"/.gtkrc-2.0
 sudo flatpak override --env=GTK_THEME=Adwaita-dark
 sudo flatpak override --env=ICON_THEME=Adwaita-dark
 
-if [ $(git status | grep -o -m 1 "On branch main") != "On branch main" ]
+if [ "$(git status | grep -o -m 1 "On branch main")" != "On branch main" ]
 then
     if [ "$(ls | grep -o -m 1 "kcs-reasonable-configs")" = "kcs-reasonable-configs" ];
     then 
@@ -79,9 +82,9 @@ yes | cp -rf "$location"/nvim "$location"/foot "$location"/hypr "$location"/wayb
 
 yes | cp -rf "$location"/.zshrc "$location"/.themes "$location"/.icons "$location"/.gtkrc-2.0 "$HOME/"
 
-yes | sudo cp -r "$location"/switch-DEs.sh /usr/bin/
+sudo cp -r "$location"/switch-DEs.sh /usr/bin/
 
-yes | sudo cp -r "$location"/switch-DEs.service /etc/systemd/system/
+sudo cp -r "$location"/switch-DEs.service /etc/systemd/system/
 
 sudo chsh -s /bin/zsh $USER
 
