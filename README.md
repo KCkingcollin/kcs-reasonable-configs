@@ -36,7 +36,7 @@ chmod +x ./Install.sh
 #### 3. Now run the script in a terminal (you will need to give sudo your password)
 
 ```
-./Install.sh
+source Install.sh
 ```
 
 
