@@ -9,7 +9,7 @@ then
     if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]
     then
         read -p "Name of the account?: " accountName
-        useradd $accountName
+        useradd -m $accountName
         passwd $accountName
         groupadd sudo
         usermod -aG sudo $accountName
