@@ -13,7 +13,7 @@ then
         passwd $accountName
         groupadd sudo
         usermod -aG sudo $accountName
-        chown -r $accountName:$accountName ./* 
+        chown -R $accountName:$accountName ./* 
         if [ "$(cat /etc/sudoers | grep -o -m 1 "# %sudo")" = "# %sudo" ]
         then
             echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
