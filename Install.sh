@@ -9,10 +9,13 @@ then
     if [ "$(echo "$answer" | grep -o "y")" = "y" ]
     then
         read -p "Name of the account?: " accountName
-        adduser $accountName
+        useradd $accountName
         passwd $accountName
         usermod -aG sudo $accountName
-        echo "%sudo	ALL=(ALL:ALL) ALL" >> ~/etc/sudoers 
+        if [ $(cat /etc/sudoers | grep -m 1 "# %sudo") = "# %sudo" ]
+        then
+            echo "%sudo	ALL=(ALL:ALL) ALL" >> /etc/sudoers 
+        fi
         echo "Please login to the new user with [su $accountName]"
         exit
     else
@@ -44,19 +47,22 @@ sudo flatpak override --filesystem="$HOME"/.gtkrc-2.0
 sudo flatpak override --env=GTK_THEME=Adwaita-dark
 sudo flatpak override --env=ICON_THEME=Adwaita-dark
 
-if [ "$(ls | grep -o -m 1 "kcs-reasonable-configs")" = "kcs-reasonable-configs" ];
-then 
-    sudo rm -r ./kcs-reasonable-configs/
+if [ $(git status | grep -m 1 "On branch main") != "On branch main" ]
+then
+    if [ "$(ls | grep -o -m 1 "kcs-reasonable-configs")" = "kcs-reasonable-configs" ];
+    then 
+        sudo rm -r ./kcs-reasonable-configs/
+    fi
+    git clone https://github.com/KCkingcollin/kcs-reasonable-configs
+    cd kcs-reasonable-configs
 fi
-git clone https://github.com/KCkingcollin/kcs-reasonable-configs
-cd kcs-reasonable-configs
 mv "$HOME/.config/nvim" "$HOME/.config/nvim.bac" 
 mv "$HOME/.config/foot" "$HOME/.config/foot.bac" 
 mv "$HOME/.config/hypr" "$HOME/.config/hypr.bac" 
 mv "$HOME/.config/waybar" "$HOME/.config/waybar.bac" 
 mv "$HOME/.config/swaync" "$HOME/.config/swaync.bac" 
 mv "$HOME/.config/rofi" "$HOME/.config/rofi.bac" 
-v "$HOME/.zshrc" "$HOME/.zshrc.bac" 
+mv "$HOME/.zshrc" "$HOME/.zshrc.bac" 
 mv "$HOME/.themes" "$HOME/.themes.bac" 
 mv "$HOME/.icons" "$HOME/.icons.bac" 
 mv "$HOME/.gtkrc-2.0" "$HOME/.gtkrc-2.0.bac" 

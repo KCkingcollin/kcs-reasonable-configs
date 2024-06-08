@@ -20,9 +20,11 @@ If you use arch you can use this script instead of doing all the steps individua
 #### 1. Download the [install script](https://github.com/KCkingcollin/kcs-reasonable-configs/blob/main/Install.sh)
 
 You can do this in the terminal with:
+note: you'll need to install ``git``
 
 ```
-wget https://raw.githubusercontent.com/KCkingcollin/kcs-reasonable-configs/main/Install.sh -O ./Install.sh
+git clone https://github.com/KCkingcollin/kcs-reasonable-configs
+cd kcs-reasonable-configs
 ```
 
 #### 2. Make the script executable
