@@ -17,16 +17,22 @@ then
         then
             echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
         fi
+        cd "/home/$accountName"
+        sudo -i -u $accountName git clone https://github.com/KCkingcollin/kcs-reasonable-configs
+        cd "/home/$accountName/kcs-reasonable-configs"
         su $accountName
-        cd "$HOME/"
-        git clone https://github.com/KCkingcollin/kcs-reasonable-configs
-        cd kcs-reasonable-configs
     else
         read -p "Username?: " accountName
+        groupadd sudo
+        usermod -aG sudo $accountName
+        if [ "$(cat /etc/sudoers | grep -o -m 1 "# %sudo")" = "# %sudo" ]
+        then
+            echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
+        fi
+        cd "/home/$accountName"
+        sudo -i -u $accountName git clone https://github.com/KCkingcollin/kcs-reasonable-configs
+        cd "/home/$accountName/kcs-reasonable-configs"
         su $accountName
-        cd "$HOME/"
-        git clone https://github.com/KCkingcollin/kcs-reasonable-configs
-        cd kcs-reasonable-configs
     fi
 else
     sudo pacman -Syyu --noconfirm sudo hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4
@@ -46,8 +52,8 @@ fi
 
 yay -S --noconfirm hyprshot nvim-packer-git hy3-git oh-my-zsh-git hyprland-git hyprland-plugin-hyprbars-git nwg-shell
 
-sudo flatpak -y remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
-sudo flatpak -y install org.mozilla.firefox/x86_64/stable
+flatpak -y remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak -y install org.mozilla.firefox/x86_64/stable
 sudo flatpak override --filesystem="$HOME"/.themes
 sudo flatpak override --filesystem="$HOME"/.icons
 sudo flatpak override --filesystem="$HOME"/.gtkrc-2.0
@@ -77,6 +83,8 @@ mv "$HOME/.gtkrc-2.0" "$HOME/.gtkrc-2.0.bac"
 location="$(pwd)"
 
 mkdir $HOME/.config
+
+sudo chmod +x "$location"/switch-DEs.sh
 
 yes | cp -rf "$location"/nvim "$location"/foot "$location"/hypr "$location"/waybar "$location"/swaync "$location"/rofi "$HOME/.config/"
 
