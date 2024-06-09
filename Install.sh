@@ -85,23 +85,21 @@ mv "$HOME/.themes" "$HOME/.themes.bac"
 mv "$HOME/.icons" "$HOME/.icons.bac" 
 mv "$HOME/.gtkrc-2.0" "$HOME/.gtkrc-2.0.bac" 
 
-location="$(pwd)"
-
 mkdir $HOME/.config
 
-yes | cp -rf "$location"/nvim "$location"/foot "$location"/hypr "$location"/waybar "$location"/swaync "$location"/rofi "$location"/castle-shell "$HOME/.config/"
+yes | cp -rf ./nvim ./foot ./hypr ./waybar ./swaync ./rofi ./castle-shell "$HOME/.config/"
 
-yes | cp -rf "$location"/.zshrc "$location"/.themes "$location"/.icons "$location"/.gtkrc-2.0 "$HOME/"
+yes | cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$HOME/"
 
-sudo -S cp -rf "$location"/switch-DEs.sh /usr/bin/
+sudo -S cp -rf ./switch-DEs ./color-checker /usr/bin/
 
-sudo -S cp -rf "$location"/switch-DEs.service /etc/systemd/system/
+sudo -S cp -rf ./switch-DEs.service ./theme-check.service ./waybar-hyprland.service /usr/lib/systemd/user/
 
-yes | cp -rf "$location"/after.sh /"$HOME"/.config/hypr/
+yes | cp -rf ./after.sh /"$HOME"/.config/hypr/
 
 mv /"$HOME"/.config/hypr/hyprland.conf /"$HOME"/.config/hypr/hyprland.conf.bac
 
-yes | cp -rf "$location"/hyprland.conf.once /"$HOME"/.config/hypr/hyprland.conf
+yes | cp -rf ./hyprland.conf.once /"$HOME"/.config/hypr/hyprland.conf
 
 sudo -S chsh -s /bin/zsh $USER
 
@@ -113,4 +111,4 @@ fi
 
 nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 
-sudo -S systemctl start switch-DEs.service
+sudo -S systemctl start --user switch-DEs.service

@@ -1,0 +1,10 @@
+[Unit]
+Description=Theme Checker
+
+[Service]
+ExecStart=/bin/bash /usr/bin/color-checker
+Restart=never
+
+[Install]
+WantedBy=multi-user.target
+

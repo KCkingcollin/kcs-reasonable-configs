@@ -1,0 +1,10 @@
+[Unit]
+Description=Waybar Service
+
+[Service]
+ExecStart=/bin/waybar
+Restart=never
+
+[Install]
+WantedBy=multi-user.target
+

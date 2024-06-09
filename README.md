@@ -146,6 +146,8 @@ cd kcs-reasonable-configs
 cp -r hypr waybar swaync foot nvim rofi castle-shell ~/.config/
 cp background.jpg ~/Pictures/background.jpg
 cp -r .zshrc .gtkrc-2.0 .icons .themes ~/
+sudo cp theme-check.service waybar-hyprland.service /usr/lib/systemd/user/
+sudo cp color-checker /usr/bin/
 ```
 
 ### Set up
