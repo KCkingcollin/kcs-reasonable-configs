@@ -111,4 +111,4 @@ fi
 
 nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 
-sudo -S systemctl start --user switch-DEs.service
+systemctl start --user switch-DEs.service
