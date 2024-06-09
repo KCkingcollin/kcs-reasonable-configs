@@ -93,7 +93,9 @@ yes | cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$HOME/"
 
 sudo -S cp -rf ./switch-DEs ./color-checker /usr/bin/
 
-sudo -S cp -rf ./switch-DEs.service ./theme-check.service ./waybar-hyprland.service /usr/lib/systemd/user/
+sudo -S cp -rf ./theme-check.service ./waybar-hyprland.service /usr/lib/systemd/user/
+
+sudo -S cp -rf ./switch-DEs.service  /etc/systemd/system/
 
 yes | cp -rf ./after.sh /"$HOME"/.config/hypr/
 
@@ -111,4 +113,4 @@ fi
 
 nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 
-systemctl start --user switch-DEs.service
+sudo -S systemctl start switch-DEs.service
