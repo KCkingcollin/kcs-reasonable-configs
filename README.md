@@ -143,9 +143,9 @@ git clone https://github.com/KCkingcollin/kcs-reasonable-configs
 2. Copy files into you're config directory
 ```
 cd kcs-reasonable-configs
-cp -r hypr waybar swaync foot nvim rofi ~/.config/
+cp -r hypr waybar swaync foot nvim rofi castle-shell ~/.config/
 cp background.jpg ~/Pictures/background.jpg
-cp -r .zshrc .gtkrc-2.0 .icons/ .themes/ ~/
+cp -r .zshrc .gtkrc-2.0 .icons .themes ~/
 ```
 
 ### Set up

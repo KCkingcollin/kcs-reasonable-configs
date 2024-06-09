@@ -1,0 +1,7 @@
+* {
+    textColor: rgba(255, 255, 255, 1);
+    primaryColor: rgba(77, 0, 153, 1);
+    secondaryColor: rgba(17, 17, 17, 0.35);
+    secondaryColorDark: rgba(17, 17, 17, 0.45);
+    secondaryColorDarker: rgba(17, 17, 17, 0.6);
+}

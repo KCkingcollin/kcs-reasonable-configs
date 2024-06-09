@@ -79,6 +79,7 @@ mv "$HOME/.config/hypr" "$HOME/.config/hypr.bac"
 mv "$HOME/.config/waybar" "$HOME/.config/waybar.bac" 
 mv "$HOME/.config/swaync" "$HOME/.config/swaync.bac" 
 mv "$HOME/.config/rofi" "$HOME/.config/rofi.bac" 
+mv "$HOME/.config/castle-shell" "$HOME/.config/castle-shell.bac" 
 mv "$HOME/.zshrc" "$HOME/.zshrc.bac" 
 mv "$HOME/.themes" "$HOME/.themes.bac" 
 mv "$HOME/.icons" "$HOME/.icons.bac" 
@@ -88,7 +89,7 @@ location="$(pwd)"
 
 mkdir $HOME/.config
 
-yes | cp -rf "$location"/nvim "$location"/foot "$location"/hypr "$location"/waybar "$location"/swaync "$location"/rofi "$HOME/.config/"
+yes | cp -rf "$location"/nvim "$location"/foot "$location"/hypr "$location"/waybar "$location"/swaync "$location"/rofi "$location"/castle-shell "$HOME/.config/"
 
 yes | cp -rf "$location"/.zshrc "$location"/.themes "$location"/.icons "$location"/.gtkrc-2.0 "$HOME/"
 

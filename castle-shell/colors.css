@@ -1,0 +1,5 @@
+@define-color textColor rgba(255, 255, 255, 1);
+@define-color primaryColor rgba(77, 0, 153, 0.5);
+@define-color secondaryColor rgba(17, 17, 17, 0.35);
+@define-color secondaryColorDark rgba(17, 17, 17, 0.45);
+@define-color secondaryColorDarker rgba(17, 17, 17, 0.6);

@@ -1,5 +1,6 @@
+@import "../castle-shell/colors.rasi"
 * {
-    foreground:  #ffeedd;
+    foreground: #ffeedd;
     backlight:   #ccffeedd;
     background-color:  transparent;
     dark: #1c1c1c;
@@ -63,7 +64,7 @@
 }
 
 #message {
-    border-color: @foreground;
+    border-color: @primaryColor;
     border:  0px 2px 2px 2px;
 //    border-radius: 10px;
     padding: 5;
@@ -71,16 +72,16 @@
 }
 #message {
     font: "Source Code Pro 8";
-    color: @white;
+    color: @textColor;
 }
 
 #inputbar {
-    color: @white;
+    color: @textColor;
     padding: 11px;
-    background-color: @black;
+    background-color: @secondaryColorDarker;
     border: 2px 2px 2px 2px;
     border-radius:  15px 15px 0px 0px;
-    border-color: @foreground;
+    border-color: @primaryColor;
     font: "Source Code Pro 18";
 }
 #entry,prompt,case-indicator {
@@ -89,7 +90,7 @@
 }
 
 entry, element-text {
-  text-color: @white;
+  text-color: @textColor;
   background-color: transparent;
 }
 
@@ -99,9 +100,9 @@ entry, element-text {
 #listview {
     padding: 8px;
     border-radius: 0px 0px 15px 15px;
-    border-color: @foreground;
+    border-color: @primaryColor;
     border: 0px 2px 2px 2px;
-    background-color: #1c1c1ccc;
+    background-color: @secondaryColor;
     dynamic: false;
     lines: 10;
 }
@@ -111,14 +112,14 @@ entry, element-text {
 //    border: 2px;
     border-radius: 4px;
     background-color: transparent;
-    color: @foreground;
+    color: @primaryColor;
     font:inherit;
 }
 #element selected.normal {
-    background-color: @black;
+    background-color: @secondaryColorDarker;
 }
 #element normal active {
-    foreground: @lightblack;
+    foreground: @secondaryColor;
 }
 #element normal urgent {
     foreground: @lightred;
@@ -126,18 +127,18 @@ entry, element-text {
 #element alternate normal {
 }
 #element alternate active {
-    foreground: @lightblack;
+    foreground: @secondaryColor;
 }
 #element alternate urgent {
     foreground: @lightred;
 }
 #element selected active {
-    background-color: @lightblack;
-    foreground: @dark;
+    background-color: @secondaryColor;
+    foreground: @secondaryColorDark;
 }
 #element selected urgent {
     background-color: @lightred;
-    foreground: @dark;
+    foreground: @secondaryColorDark;
 }
 #element normal normal {
 
@@ -162,15 +163,15 @@ entry, element-text {
     padding: 6px;
     border: 2px 0px 2px 2px;
     border-radius: 4px 0px 0px 4px;
-    background-color: @tlightblack;
-    border-color: @foreground;
-    color: @foreground;
+    background-color: @secondaryColor;
+    border-color: @primaryColor;
+    color: @primaryColor;
     horizontal-align: 0.5;
 }
 #button selected normal {
-    color: @dark;
+    color: @secondaryColorDark;
     border: 2px 0px 2px 2px;
-    background-color: @backlight;
-    border-color: @foreground;
+    background-color: @secondaryColorDark;
+    border-color: @primaryColor;
 }
 

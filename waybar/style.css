@@ -1,3 +1,4 @@
+@import "../castle-shell/colors.css";
 * {
     /* `otf-font-awesome` is required to be installed for icons */
     font-family: FontAwesome, Roboto, Helvetica, Arial, sans-serif;
@@ -25,7 +26,7 @@
 }
 
 window#waybar {
-    background-color: rgba(17, 17, 17, 0.35);
+    background-color: @secondaryColor;
     transition-property: background-color;
     transition-duration: .5s;
 }
@@ -37,7 +38,7 @@ window#waybar.hidden {
 .module {
     padding: 4px 10px;
     margin: 0 2px;
-    background-color: rgba(77, 0, 153, 0.5);
+    background-color: @primaryColor;
     transition: .5s;
     margin-top: 5px;
     margin-bottom: 5px;
@@ -140,7 +141,7 @@ label:focus {
 #privacy {
     padding: 4px 10px;
     margin: 0 2px;
-    background-color: rgba(77, 0, 153, 0.5);
+    background-color: @primaryColor;
     transition: .5s;
     margin-top: 5px;
     margin-bottom: 5px;

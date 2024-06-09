@@ -154,4 +154,5 @@ configuration {
       sorting-method:    "name";
   }
 }
+@import "../castle-shell/colors.rasi"
 @theme "custom"
