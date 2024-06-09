@@ -3,7 +3,7 @@ Description=restart DE
 
 [Service]
 User=root
-ExecStart=/bin/bash /usr/bin/switch-DEs.sh
+ExecStart=/bin/bash /usr/bin/switch-DEs
 Restart=never
 
 [Install]
