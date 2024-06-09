@@ -3,7 +3,7 @@
     /* `otf-font-awesome` is required to be installed for icons */
     font-family: FontAwesome, Roboto, Helvetica, Arial, sans-serif;
     font-size: 18px;
-    color: #ffffff;
+    color: @textColor;
     transition: .5s;
     /*letter-spacing: 1px;*/
 }
@@ -211,7 +211,6 @@ label:focus {
 /* Using steps() instead of linear as a timing function to limit cpu usage */
 #battery.critical:not(.charging) {
     background-color: #f53c3c;
-    color: #ffffff;
     animation-name: blink;
     animation-duration: 0.5s;
     animation-timing-function: steps(12);
