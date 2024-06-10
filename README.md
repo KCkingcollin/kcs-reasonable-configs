@@ -94,19 +94,17 @@ yay -S hyprshot nvim-packer-git oh-my-zsh-git nwg-shell pamac-all
 ```
 hy3
 hyprbars
+hyprspace
 ```
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term:
 ```
 hyprpm update
 hyprpm add https://github.com/hyprwm/hyprland-plugins
 hyprpm add add https://github.com/outfoxxed/hy3
+hyprpm add https://github.com/KZDKM/Hyprspace
 hyprpm enable hyprbars
 hyprpm enable hy3
-```
-note: if hyprpm throws an error when updating run:
-```
-sudo rm -r ~/Hyprland/ 
-git clone https://github.com/hyprwm/Hyprland.git 
+hyprpm enable hyprspace
 ```
 
 #### Other/optional
