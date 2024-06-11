@@ -3,11 +3,11 @@
 yes | rm -r ~/Hyprland/ 
 git clone https://github.com/hyprwm/Hyprland.git 
 yes | hyprpm -n update
-yes | hyprpm -n add https://github.com/hyprwm/hyprland-plugins
 yes | hyprpm -n add https://github.com/outfoxxed/hy3
-yes | hyprpm -n add https://github.com/KZDKM/Hyprspace
-yes | hyprpm -n enable hyprbars
 yes | hyprpm -n enable hy3
+yes | hyprpm -n add https://github.com/KCkingcollin/only-hyprbars
+yes | hyprpm -n enable hyprbars
+yes | hyprpm -n add https://github.com/KZDKM/Hyprspace
 yes | hyprpm -n enable hyprspace
 mv "$HOME/.config/hypr/hyprland.conf.bac" "$HOME/.config/hypr/hyprland.conf"
 
