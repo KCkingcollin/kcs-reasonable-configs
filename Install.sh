@@ -2,7 +2,7 @@
 
 if [ $USER = 'root' ]
 then
-    pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs
+    pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim kitty gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs
     echo "You need to run this script as a sudo user NOT as root"
     echo "Create a new account?"
     read -p "[Y/n]: " answer
@@ -38,7 +38,7 @@ then
         return
     fi
 else
-    sudo -S pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs
+    sudo -S pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim kitty gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs
 fi
 
 if [ "$(pacman -Q | grep -o -m 1 yay)" != "yay" ];
@@ -74,7 +74,7 @@ then
     cd kcs-reasonable-configs
 fi
 mv "$HOME/.config/nvim" "$HOME/.config/nvim.bac" 
-mv "$HOME/.config/foot" "$HOME/.config/foot.bac" 
+mv "$HOME/.config/kitty" "$HOME/.config/foot.bac" 
 mv "$HOME/.config/hypr" "$HOME/.config/hypr.bac" 
 mv "$HOME/.config/waybar" "$HOME/.config/waybar.bac" 
 mv "$HOME/.config/swaync" "$HOME/.config/swaync.bac" 
@@ -87,7 +87,7 @@ mv "$HOME/.gtkrc-2.0" "$HOME/.gtkrc-2.0.bac"
 
 mkdir $HOME/.config
 
-yes | cp -rf ./nvim ./foot ./hypr ./waybar ./swaync ./rofi ./castle-shell "$HOME/.config/"
+yes | cp -rf ./nvim ./kitty ./hypr ./waybar ./swaync ./rofi ./castle-shell "$HOME/.config/"
 
 yes | cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$HOME/"
 
@@ -105,7 +105,7 @@ mv /"$HOME"/.config/hypr/hyprland.conf /"$HOME"/.config/hypr/hyprland.conf.bac
 
 yes | cp -rf ./hyprland.conf.once /"$HOME"/.config/hypr/hyprland.conf
 
-sudo -S chsh -s /bin/zsh $USER
+sudo -S chsh -s /bin/zsh "$USER"
 
 if [ "$(ls "$HOME/Pictures/" | grep -o -m 1 "background.jpg")" != "background.jpg" ];
 then
@@ -117,5 +117,11 @@ nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 
 # make damn sure it gets the environment before running hyprland the first time
 systemctl --user import-environment
+
+sudo -S echo "[User]
+Session=hyprland
+XSession=hyprland
+Icon="$HOME"/.face
+SystemAccount=false" > /var/lib/AccountsService/users/"$USER"
 
 sudo -S systemctl start switch-DEs.service

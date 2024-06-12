@@ -70,7 +70,7 @@ gtk3
 gtk4
 rofi-wayland
 neovim
-foot
+kitty
 neofetch
 zsh
 zsh-autosuggestions
@@ -83,7 +83,7 @@ xdg-user-dirs
 ```
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term
 ```
-sudo pacman -S hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git cpio meson cmake npm gtk2 gtk3 gtk4 hyprwayland-scanner rofi-wayland neovim foot zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs
+sudo pacman -S hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git cpio meson cmake npm gtk2 gtk3 gtk4 hyprwayland-scanner rofi-wayland neovim kitty zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs
 ```
 
 
@@ -145,7 +145,7 @@ git clone https://github.com/KCkingcollin/kcs-reasonable-configs
 2. Copy files into your config directory
 ```
 cd kcs-reasonable-configs
-cp -r hypr waybar swaync foot nvim rofi castle-shell ~/.config/
+cp -r hypr waybar swaync kitty nvim rofi castle-shell ~/.config/
 cp background.jpg ~/Pictures/background.jpg
 cp -r .zshrc .gtkrc-2.0 .icons .themes ~/
 sudo cp theme-check.service waybar-hyprland.service /usr/lib/systemd/user/

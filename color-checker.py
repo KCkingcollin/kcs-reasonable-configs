@@ -34,7 +34,7 @@ def main():
     home = os.path.expanduser("~")
     color_file = os.path.join(home, ".config/castle-shell/accent-color")
     hypr_conf_file = os.path.join(home, ".config/hypr/custom/looks.conf")
-    foot_conf_file = os.path.join(home, ".config/foot/foot.ini")
+    kitty_conf_file = os.path.join(home, ".config/kitty/kitty.conf")
     css_file = os.path.join(home, ".config/castle-shell/colors.css")
     rasi_file = os.path.join(home, ".config/castle-shell/colors.rasi")
 
@@ -80,10 +80,10 @@ def main():
 
         # Update Foot configuration
         try:
-            replace_line_in_file(foot_conf_file, "background=", f'background={hex_alt}')
-            print(f'Updated Foot configuration')
+            replace_line_in_file(kitty_conf_file, "background #", f'background #{hex_alt}')
+            print(f'Updated Kitty configuration')
         except Exception as e:
-            print(f'Error updating Foot configuration: {e}')
+            print(f'Error updating Kitty configuration: {e}')
             continue
 
         # Generate CSS file
