@@ -4,6 +4,7 @@ import hashlib
 import time
 import os
 import subprocess
+import signal
 
 # Function to calculate the md5 hash of a file
 def md5sum(filepath):
@@ -28,6 +29,20 @@ def replace_line_in_file(filepath, search_term, new_line):
                 file.write(new_line + '\n')
             else:
                 file.write(line)
+def reload_kitty_config():
+    try:
+        # Get all PIDs of running kitty processes
+        kitty_pids = subprocess.check_output(['pgrep', '-f', 'kitty']).decode().strip().split('\n')
+        
+        if kitty_pids:
+            # Iterate over each PID and send the signal
+            for pid in kitty_pids:
+                os.kill(int(pid), signal.SIGUSR1)
+            print("Reloaded kitty configuration for all instances.")
+        else:
+            print("kitty is not running.")
+    except subprocess.CalledProcessError:
+        print("kitty is not running.")
 
 # Main loop to check for changes and update colors
 def main():
@@ -58,6 +73,8 @@ def main():
         hex_alt = rgb2hex(*out_alt)
         css_prime = num2css(*out_prime)
         css_alt = num2css(*out_alt)
+        hex_text = 'ffffff'
+        css_text = '255, 255, 255'
 
         print(f'Converted colors - Hex Prime: {hex_prime}, Hex Alt: {hex_alt}')
         print(f'CSS Prime: {css_prime}, CSS Alt: {css_alt}')
@@ -78,13 +95,20 @@ def main():
             print(f'Error updating Hyprland configuration: {e}')
             continue
 
-        # Update Foot configuration
+        # Update Kitty configuration
         try:
-            replace_line_in_file(kitty_conf_file, "background #", f'background #{hex_alt}')
+            kitty_colors = {
+                "foreground #": f'foreground #{hex_text}',
+                "background #": f'background #{hex_alt}',
+            }
+            for key, value in kitty_colors.items():
+                replace_line_in_file(kitty_conf_file, key, value)
             print(f'Updated Kitty configuration')
         except Exception as e:
             print(f'Error updating Kitty configuration: {e}')
             continue
+
+        reload_kitty_config()
 
         # Generate CSS file
         css_content = f"""
