@@ -68,10 +68,18 @@ npm
 gtk2
 gtk3
 gtk4
+rofi-wayland
+neovim
+foot
+neofetch
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
+zsh-history-substring-search
 ```
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term
 ```
-sudo pacman -S hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git cpio meson cmake npm gtk2 gtk3 gtk4 hyprwayland-scanner
+sudo pacman -S hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git cpio meson cmake npm gtk2 gtk3 gtk4 hyprwayland-scanner rofi-wayland neovim foot zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch 
 ```
 
 
@@ -111,34 +119,26 @@ I personally use these, but they can be changed in ``~/.config/hypr/custom/setti
 Just make sure you either install these or set your own, otherwise some things might not work.
 Also, unless you plan to run hyprland via the ``Hyprland`` command every time I'd suggest installing ``gdm``.
 ```
-rofi-wayland
-neovim
-foot
 nemo
 gdm
-zsh
-zsh-autosuggestions
-zsh-syntax-highlighting
-zsh-history-substring-search
-neofetch
 kdeconnect
 gnome-control-center
 ```
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term:
 ```
-sudo pacman -S flatpak nemo rofi-wayland neovim foot zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect gdm
+sudo pacman -S flatpak nemo kdeconnect gdm gnome-control-center
 flatpak remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
 flatpak install org.mozilla.firefox/x86_64/stable
 ```
 
 ### Installation
 
-1. Clone this repo into you're home folder
+1. Clone this repo into Your home folder
 ```
 git clone https://github.com/KCkingcollin/kcs-reasonable-configs
 ```
 
-2. Copy files into you're config directory
+2. Copy files into your config directory
 ```
 cd kcs-reasonable-configs
 cp -r hypr waybar swaync foot nvim rofi castle-shell ~/.config/
@@ -151,11 +151,11 @@ sudo cp color-checker /usr/bin/
 ### Set up
 
 #### 1. Hyprland
-1. You should see the "hyprland" option in you're display manager (login screen), select it and loggin.
+1. You should see the "hyprland" option in your display manager (login screen), select it and log in.
 
-2. If it dosen't start right away then double check you're logged out of any other shell session, and use Ctrl+Alt+F1-F12 to open a tty and run the command ``Hyprland`` (don't forget that "H" is capitalized)
+2. If it doesn't start right away then double check you're logged out of any other shell session, and use Ctrl+Alt+F1-F12 to open a tty and run the command ``Hyprland`` (don't forget that "H" is capitalized)
 
-3. If the ``Hyprland`` command runs, but not when selecting it at login you may want to try a diffrent display manager like [gdm](https://wiki.archlinux.org/title/Display_manager#Loading_the_display_manager) (you need to disable any other display manager).
+3. If the ``Hyprland`` command runs, but not when selecting it at login you may want to try a different display manager like [gdm](https://wiki.archlinux.org/title/Display_manager#Loading_the_display_manager) (you need to disable any other display manager).
 #### 2. Neovim
 1. Open neovim with either Super(win)+e or by typing ``nvim`` in any terminal.
 
