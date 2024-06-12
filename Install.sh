@@ -2,7 +2,7 @@
 
 if [ $USER = 'root' ]
 then
-    pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center
+    pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python
     echo "You need to run this script as a sudo user NOT as root"
     echo "Create a new account?"
     read -p "[Y/n]: " answer
@@ -38,7 +38,7 @@ then
         return
     fi
 else
-    sudo -S pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center
+    sudo -S pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim foot gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python
 fi
 
 if [ "$(pacman -Q | grep -o -m 1 yay)" != "yay" ];
@@ -91,7 +91,9 @@ yes | cp -rf ./nvim ./foot ./hypr ./waybar ./swaync ./rofi ./castle-shell "$HOME
 
 yes | cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$HOME/"
 
-sudo -S cp -rf ./switch-DEs ./color-checker /usr/bin/
+sudo -S cp -rf ./switch-DEs.sh ./color-checker.py /usr/bin/
+sudo -S mv /usr/bin/color-checker.py /usr/bin/color-checker
+sudo -S mv /usr/bin/switch-DEs.sh /usr/bin/switch-DEs
 
 sudo -S cp -rf ./theme-check.service ./waybar-hyprland.service /usr/lib/systemd/user/
 

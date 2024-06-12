@@ -76,10 +76,11 @@ zsh
 zsh-autosuggestions
 zsh-syntax-highlighting
 zsh-history-substring-search
+python
 ```
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term
 ```
-sudo pacman -S hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git cpio meson cmake npm gtk2 gtk3 gtk4 hyprwayland-scanner rofi-wayland neovim foot zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch 
+sudo pacman -S hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git cpio meson cmake npm gtk2 gtk3 gtk4 hyprwayland-scanner rofi-wayland neovim foot zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch python
 ```
 
 
@@ -145,7 +146,8 @@ cp -r hypr waybar swaync foot nvim rofi castle-shell ~/.config/
 cp background.jpg ~/Pictures/background.jpg
 cp -r .zshrc .gtkrc-2.0 .icons .themes ~/
 sudo cp theme-check.service waybar-hyprland.service /usr/lib/systemd/user/
-sudo cp color-checker /usr/bin/
+sudo cp color-checker.py /usr/bin/
+sudo mv /usr/bin/color-checker.py /usr/bin/color-checker 
 ```
 
 ### Set up
