@@ -89,14 +89,14 @@ sudo pacman -S hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-key
 hyprshot
 nvim-packer-git
 oh-my-zsh-git
-nwg-shell
+nwg-displays
 pamac-all
 ```
 
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term
 (You'll need to install [yay](https://github.com/Jguer/yay) to use this command)
 ```
-yay -S hyprshot nvim-packer-git oh-my-zsh-git nwg-shell pamac-all
+yay -S hyprshot nvim-packer-git oh-my-zsh-git nwg-displays pamac-all
 ```
 
 #### Hyprpm 

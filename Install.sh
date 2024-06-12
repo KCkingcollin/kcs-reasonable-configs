@@ -54,7 +54,7 @@ then
 fi
 
 # yay -S --noconfirm hyprshot nvim-packer-git hy3-git oh-my-zsh-git hyprland-git hyprland-plugin-hyprbars-git nwg-shell
-yay -S --noconfirm hyprshot nvim-packer-git oh-my-zsh-git nwg-shell pamac-all
+yay -S --noconfirm hyprshot nvim-packer-git oh-my-zsh-git nwg-displays pamac-all
 
 sudo -S flatpak -y remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
 sudo -S flatpak -y install org.mozilla.firefox/x86_64/stable
