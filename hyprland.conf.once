@@ -14,4 +14,4 @@ source = ~/.config/hypr/custom/keybindings.conf
 #
 source = ~/.config/hypr/monitors.conf
 source = ~/.config/hypr/workspaces.conf
-exec-once = foot -e ~/.config/hypr/after.sh
+exec-once = kitty -e ~/.config/hypr/after.sh
