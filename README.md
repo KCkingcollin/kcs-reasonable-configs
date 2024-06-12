@@ -94,17 +94,16 @@ yay -S hyprshot nvim-packer-git oh-my-zsh-git nwg-shell pamac-all
 ```
 hy3
 hyprbars
-hyprspace
+hyprexpo
 ```
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term:
 ```
 hyprpm update
-hyprpm add https://github.com/KCkingcollin/only-hyprbars
 hyprpm add add https://github.com/outfoxxed/hy3
-hyprpm add https://github.com/KZDKM/Hyprspace
-hyprpm enable hyprbars
 hyprpm enable hy3
-hyprpm enable hyprspace
+hyprpm add https://github.com/KCkingcollin/castle-shell-plugins
+hyprpm enable hyprbars
+hyprpm enable hyprexpo
 ```
 
 #### Other/optional
@@ -123,10 +122,11 @@ zsh-syntax-highlighting
 zsh-history-substring-search
 neofetch
 kdeconnect
+gnome-control-center
 ```
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term:
 ```
-sudo pacman -S flatpak nemo rofi-wayland neovim foot gdm zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect
+sudo pacman -S flatpak nemo rofi-wayland neovim foot zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch kdeconnect gdm
 flatpak remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
 flatpak install org.mozilla.firefox/x86_64/stable
 ```

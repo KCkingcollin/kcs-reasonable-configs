@@ -5,10 +5,9 @@ git clone https://github.com/hyprwm/Hyprland.git
 yes | hyprpm -n update
 yes | hyprpm -n add https://github.com/outfoxxed/hy3
 yes | hyprpm -n enable hy3
-yes | hyprpm -n add https://github.com/KCkingcollin/only-hyprbars
+yes | hyprpm -n add https://github.com/KCkingcollin/castle-shell-plugins
 yes | hyprpm -n enable hyprbars
-yes | hyprpm -n add https://github.com/KZDKM/Hyprspace
-yes | hyprpm -n enable hyprspace
+yes | hyprpm -n enable hyprexpo
 mv "$HOME/.config/hypr/hyprland.conf.bac" "$HOME/.config/hypr/hyprland.conf"
 
 # repeat=true
