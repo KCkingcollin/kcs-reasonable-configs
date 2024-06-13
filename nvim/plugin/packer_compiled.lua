@@ -194,6 +194,11 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/vim-transparent",
     url = "https://github.com/tribela/vim-transparent"
+  },
+  ["yanky.nvim"] = {
+    loaded = true,
+    path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/yanky.nvim",
+    url = "https://github.com/gbprod/yanky.nvim"
   }
 }
 
