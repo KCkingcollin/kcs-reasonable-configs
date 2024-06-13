@@ -1,8 +1,0 @@
-import os
-import sys
-
-def reload_config():
-    os.kill(os.getpid(), 10)  # Send SIGUSR1 to reload config
-
-if __name__ == '__main__':
-    reload_config()
