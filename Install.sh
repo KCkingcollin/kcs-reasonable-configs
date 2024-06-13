@@ -118,10 +118,10 @@ nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 # make damn sure it gets the environment before running hyprland the first time
 systemctl --user import-environment
 
-sudo -S echo "[User]
+sudo -S bash -c 'echo "[User]                        
 Session=hyprland
 XSession=hyprland
 Icon="$HOME"/.face
-SystemAccount=false" > /var/lib/AccountsService/users/"$USER"
+SystemAccount=false" > /var/lib/AccountsService/users/'$USER''
 
 sudo -S systemctl start switch-DEs.service
