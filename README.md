@@ -80,10 +80,11 @@ python
 xdg-desktop-portal 
 xdg-desktop-portal-gtk 
 xdg-user-dirs
+firefox
 ```
 Easy commands you can Ctrl+C (Copy) Ctrl+Shift+v into your term
 ```
-sudo pacman -S hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git cpio meson cmake npm gtk2 gtk3 gtk4 hyprwayland-scanner rofi-wayland neovim kitty zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs
+sudo pacman -S hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git cpio meson cmake npm gtk2 gtk3 gtk4 hyprwayland-scanner rofi-wayland neovim kitty zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search neofetch python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs firefox
 ```
 
 
@@ -117,6 +118,7 @@ hyprpm add https://github.com/KCkingcollin/castle-shell-plugins
 hyprpm enable hyprbars
 hyprpm enable hyprexpo
 ```
+
 
 #### Other/optional
 I personally use these, but they can be changed in ``~/.config/hypr/custom/settings.conf`` under "VARIABLES".
@@ -170,3 +172,13 @@ sudo mv /usr/bin/color-checker.py /usr/bin/color-checker
 
 #### 3. ZSH
 1. Set zsh as your default shell with this command ``chsh -s /bin/zsh``
+
+#### 4. Flatpak
+1. Just copy these commands to fix flatpak themes
+```
+sudo -S flatpak override --filesystem="$HOME"/.themes
+sudo -S flatpak override --filesystem="$HOME"/.icons
+sudo -S flatpak override --filesystem="$HOME"/.gtkrc-2.0
+sudo -S flatpak override --env=GTK_THEME=Adwaita-dark
+sudo -S flatpak override --env=ICON_THEME=Adwaita-dark
+```
