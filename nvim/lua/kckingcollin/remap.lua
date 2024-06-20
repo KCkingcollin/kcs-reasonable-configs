@@ -32,10 +32,10 @@ vim.keymap.set("n", "Q", "<nop>")
 vim.keymap.set("n", "<C-f>", "<cmd>silent !tmux neww tmux-sessionizer<CR>")
 vim.keymap.set("n", "<leader>f", vim.lsp.buf.format)
 
-vim.keymap.set("n", "<leader><C-k>", "<cmd>cnext<CR>zz")
-vim.keymap.set("n", "<leader><C-j>", "<cmd>cprev<CR>zz")
-vim.keymap.set("n", "<leader>k", "<cmd>lnext<CR>zz")
-vim.keymap.set("n", "<leader>j", "<cmd>lprev<CR>zz")
+vim.keymap.set("n", "<leader>k", "<cmd>cnext<CR>zz")
+vim.keymap.set("n", "<leader>j", "<cmd>cprev<CR>zz")
+vim.keymap.set("n", "<S-k>", "<cmd>lnext<CR>zz")
+vim.keymap.set("n", "<S-j>", "<cmd>lprev<CR>zz")
 
 vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
 vim.keymap.set("n", "<leader>x", "<cmd>!chmod +x %<CR>", { silent = true })
@@ -61,27 +61,20 @@ vim.keymap.set("n", "<leader>l", vim.diagnostic.goto_next)
 vim.keymap.set("n", "<leader>h", vim.diagnostic.goto_prev)
 
 -- everyone but the normys will hate this
-vim.keymap.set("n", "<C-s>", vim.cmd.w)
-vim.keymap.set("i", "<C-s>", vim.cmd.w)
-vim.keymap.set("v", "<C-s>", vim.cmd.w)
+vim.keymap.set({"n", "i", "v"}, "<C-s>", vim.cmd.w)
 
-vim.keymap.set("n", "<C-z>", vim.cmd.undo)
-vim.keymap.set("i", "<C-z>", vim.cmd.undo)
-vim.keymap.set("v", "<C-z>", vim.cmd.undo)
+vim.keymap.set({"n", "i", "v"}, "<C-z>", vim.cmd.undo)
 
-vim.keymap.set("n", "<C-y>", vim.cmd.redo)
-vim.keymap.set("i", "<C-y>", vim.cmd.redo)
-vim.keymap.set("v", "<C-y>", vim.cmd.redo)
+vim.keymap.set({"n", "i", "v"}, "<C-y>", vim.cmd.redo)
 
 vim.keymap.set("n", "<LeftMouse>", "i<LeftMouse>")
 vim.keymap.set("v", "<LeftMouse>", "<S-i><LeftMouse>")
 
--- This is going to get me cancelled
+-- This is going to get me canceled
 vim.keymap.set("v", "<C-c>", [["+y]])
 
-vim.keymap.set("n", "<C-v>", [["+p]])
+vim.keymap.set({"n", "v"}, "<C-v>", [["+p]])
 vim.keymap.set("i", "<C-v>", [[<Esc>"+p]])
-vim.keymap.set("v", "<C-v>", [["+p]])
 
 vim.keymap.set("i", "<C-f>", "<Esc>/")
 
@@ -93,4 +86,8 @@ vim.keymap.set({"n","x"}, "gP", "<Plug>(YankyGPutBefore)")
 vim.keymap.set("n", "<c-p>", "<Plug>(YankyPreviousEntry)")
 vim.keymap.set("n", "<c-n>", "<Plug>(YankyNextEntry)")
 
-
+-- C-p/n to Alt-j/k remap
+vim.keymap.set({"n", "i", "v"}, '<M-j>', '<C-p>')
+vim.keymap.set({"n", "i", "v"}, '<M-k>', '<C-n>')
+vim.keymap.set('c', '<M-k>', '<C-p>')
+vim.keymap.set('c', '<M-j>', '<C-n>')

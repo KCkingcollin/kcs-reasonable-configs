@@ -18,6 +18,18 @@ local function should_enable_wrap()
     return false
 end
 
+-- Function to disable the keybinding
+local function disable_keybinding()
+  vim.fn.system("hyprctl keyunbind alt+j")
+  vim.fn.system("hyprctl keyunbind alt+k")
+end
+
+-- Function to enable the keybinding
+local function enable_keybinding()
+  vim.fn.system("hyprctl keybind alt+j")
+  vim.fn.system("hyprctl keybind alt+k")
+end
+
 vim.opt.guicursor = ""
 
 vim.opt.nu = true
@@ -105,4 +117,15 @@ vim.api.nvim_create_autocmd('BufReadPost', {
             vim.wo.wrap = false
         end
     end,
+})
+-- Autocommand to disable the keybinding when Neovim opens
+vim.api.nvim_create_autocmd("VimEnter", {
+  pattern = "*",
+  callback = disable_keybinding,
+})
+
+-- Autocommand to enable the keybinding when Neovim exits
+vim.api.nvim_create_autocmd("VimLeave", {
+  pattern = "*",
+  callback = enable_keybinding,
 })
