@@ -87,7 +87,5 @@ vim.keymap.set("n", "<c-p>", "<Plug>(YankyPreviousEntry)")
 vim.keymap.set("n", "<c-n>", "<Plug>(YankyNextEntry)")
 
 -- C-p/n to Alt-j/k remap
-vim.keymap.set({"n", "i", "v"}, '<M-j>', '<C-p>')
-vim.keymap.set({"n", "i", "v"}, '<M-k>', '<C-n>')
 vim.keymap.set('c', '<M-k>', '<up>')
 vim.keymap.set('c', '<M-j>', '<down>')
