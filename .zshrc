@@ -3,6 +3,15 @@
 
 # Path to your oh-my-zsh installation.
 export ZSH="/usr/share/oh-my-zsh"
+mytime() {
+    local start end elapsed
+    start=$(date +%s%N)   # Nanoseconds since epoch
+    "$@"
+    end=$(date +%s%N)     # Nanoseconds since epoch
+    elapsed=$((end - start))
+    echo "Elapsed time: $((elapsed / 1000)) µs"
+}
+alias time='mytime'
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,

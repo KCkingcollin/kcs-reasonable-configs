@@ -66,4 +66,12 @@ return require('packer').startup(function(use)
 --    use ('alexghergh/nvim-tmux-navigation')
 	use("theprimeagen/vim-be-good")
     use("gbprod/yanky.nvim")
+    -- debugging
+    use {
+        "mfussenegger/nvim-dap",
+        "rcarriga/nvim-dap-ui",
+        "theHamsta/nvim-dap-virtual-text",
+        "leoluz/nvim-dap-go",
+        "nvim-neotest/nvim-nio"
+    }
 end)

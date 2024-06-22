@@ -67,13 +67,13 @@ vim.keymap.set({"n", "i", "v"}, "<C-z>", vim.cmd.undo)
 
 vim.keymap.set({"n", "i", "v"}, "<C-y>", vim.cmd.redo)
 
-vim.keymap.set("n", "<LeftMouse>", "i<LeftMouse>")
-vim.keymap.set("v", "<LeftMouse>", "<S-i><LeftMouse>")
+-- vim.keymap.set("n", "<LeftMouse>", "i<LeftMouse>")
+-- vim.keymap.set("v", "<LeftMouse>", "<S-i><LeftMouse>")
 
 -- This is going to get me canceled
 vim.keymap.set("v", "<C-c>", [["+y]])
 
-vim.keymap.set({"n", "v"}, "<C-v>", [["+p]])
+vim.keymap.set("v", "<C-v>", [["+p]])
 vim.keymap.set("i", "<C-v>", [[<Esc>"+p]])
 
 vim.keymap.set("i", "<C-f>", "<Esc>/")
@@ -89,3 +89,12 @@ vim.keymap.set("n", "<c-n>", "<Plug>(YankyNextEntry)")
 -- C-p/n to Alt-j/k remap
 vim.keymap.set('c', '<M-k>', '<up>')
 vim.keymap.set('c', '<M-j>', '<down>')
+
+-- debugging
+vim.api.nvim_set_keymap('n', '<leader>d', ':lua require"dap".continue()<CR>:lua require"dapui".toggle()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>]', ':lua require"dap".step_over()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>\\', ':lua require"dap".step_into()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>[', ':lua require"dap".step_out()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>b', ':lua require"dap".toggle_breakpoint()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>dr', ':lua require"dapui".toggle()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>dd', ':lua require("dapui").eval()<CR>', { noremap = true, silent = true })
