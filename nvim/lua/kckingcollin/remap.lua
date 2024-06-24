@@ -49,9 +49,9 @@ vim.keymap.set(
 vim.keymap.set("n", "<leader>vpp", "<cmd>e ~/.dotfiles/nvim/.config/nvim/lua/theprimeagen/packer.lua<CR>");
 vim.keymap.set("n", "<leader>mr", "<cmd>CellularAutomaton make_it_rain<CR>");
 
-vim.keymap.set("n", "<leader><leader>", function()
-    vim.cmd("so")
-end)
+-- vim.keymap.set("n", "<leader><leader>", function()
+--     vim.cmd("so")
+-- end)
 vim.keymap.set("n", "<leader>m", function ()
     vim.cmd("vsplit")
     vim.cmd("edit ~/.config/nvim/lua/kckingcollin/remap.lua")
@@ -91,10 +91,14 @@ vim.keymap.set('c', '<M-k>', '<up>')
 vim.keymap.set('c', '<M-j>', '<down>')
 
 -- debugging
-vim.api.nvim_set_keymap('n', '<leader>d', ':lua require"dap".continue()<CR>:lua require"dapui".toggle()<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>]', ':lua require"dap".step_over()<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>\\', ':lua require"dap".step_into()<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>[', ':lua require"dap".step_out()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>9', ':lua require"dapui".toggle()<CR>:lua require"dap".continue()<CR>1<CR><CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>8', ':lua require"dapui".toggle()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>1', ':lua require"dap".continue()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>2', ':lua require("dapui").eval()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>3', ":lua require('dap-go').debug_test()<CR>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>4', ":lua require('dap-go').debug_last_test()", { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>5', ':lua require"dap".step_over()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>6', ':lua require"dap".step_into()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>7', ':lua require"dap".step_out()<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>b', ':lua require"dap".toggle_breakpoint()<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>dr', ':lua require"dapui".toggle()<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>dd', ':lua require("dapui").eval()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>bb', 'lua require("dap").clear_breakpoints()<CR>', { noremap = true, silent = true })
