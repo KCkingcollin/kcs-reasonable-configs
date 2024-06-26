@@ -74,4 +74,5 @@ return require('packer').startup(function(use)
         "leoluz/nvim-dap-go",
         "nvim-neotest/nvim-nio"
     }
+    use('jiangmiao/auto-pairs')
 end)
