@@ -90,8 +90,11 @@ vim.keymap.set("n", "<c-n>", "<Plug>(YankyNextEntry)")
 vim.keymap.set('c', '<M-k>', '<up>')
 vim.keymap.set('c', '<M-j>', '<down>')
 
+-- quick term em
+vim.api.nvim_set_keymap('n', '<leader>t', ':below 6sp<CR>:terminal<CR>i<CR>clear<CR>', { noremap = true, silent = true })
+
 -- debugging
-vim.api.nvim_set_keymap('n', '<leader>9', ':lua require"dapui".toggle()<CR>:lua require"dap".continue()<CR>1<CR><CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>9', ':lua require"dapui".toggle()<CR>:lua require"dap".continue()<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>8', ':lua require"dapui".toggle()<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>1', ':lua require"dap".continue()<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>2', ':lua require("dapui").eval()<CR>', { noremap = true, silent = true })

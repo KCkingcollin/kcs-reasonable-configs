@@ -75,4 +75,8 @@ return require('packer').startup(function(use)
         "nvim-neotest/nvim-nio"
     }
     use('jiangmiao/auto-pairs')
+    use('hrsh7th/cmp-vsnip')
+    use('hrsh7th/vim-vsnip')
+    use('dcampos/nvim-snippy')
+    use('dcampos/cmp-snippy')
 end)

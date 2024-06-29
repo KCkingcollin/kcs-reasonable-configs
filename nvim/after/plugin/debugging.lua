@@ -1,9 +1,42 @@
--- local dap = require('dap')
+local dap = require('dap')
 local dapui = require('dapui')
 -- local nio = require('nio')
 
 dapui.setup()
 require("nvim-dap-virtual-text").setup()
+
+Home = os.getenv( "HOME" )
+
+dap.adapters.cppdbg = {
+  id = 'cppdbg',
+  type = 'executable',
+  command = Home .. "/.config/nvim/Debuggers/ccptools/OpenDebugAD7",
+}
+
+dap.configurations.c = {
+  {
+    name = "Launch file",
+    type = "cppdbg",
+    request = "launch",
+    program = function()
+      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+    end,
+    cwd = '${workspaceFolder}',
+    stopAtEntry = true,
+  },
+  {
+    name = 'Attach to gdbserver',
+    type = 'cppdbg',
+    request = 'launch',
+    MIMode = 'gdb',
+    miDebuggerServerAddress = 'localhost:${port}',
+    miDebuggerPath = '/usr/bin/gdb',
+    cwd = '${workspaceFolder}',
+    program = function()
+      return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+    end,
+  },
+}
 
 require('dap-go').setup {
     -- Additional dap configurations can be added.

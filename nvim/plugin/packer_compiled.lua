@@ -104,10 +104,20 @@ _G.packer_plugins = {
     path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/cmp-path",
     url = "https://github.com/hrsh7th/cmp-path"
   },
+  ["cmp-snippy"] = {
+    loaded = true,
+    path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/cmp-snippy",
+    url = "https://github.com/dcampos/cmp-snippy"
+  },
   ["cmp-spell"] = {
     loaded = true,
     path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/cmp-spell",
     url = "https://github.com/f3fora/cmp-spell"
+  },
+  ["cmp-vsnip"] = {
+    loaded = true,
+    path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/cmp-vsnip",
+    url = "https://github.com/hrsh7th/cmp-vsnip"
   },
   cmp_luasnip = {
     loaded = true,
@@ -174,6 +184,11 @@ _G.packer_plugins = {
     path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/nvim-nio",
     url = "https://github.com/nvim-neotest/nvim-nio"
   },
+  ["nvim-snippy"] = {
+    loaded = true,
+    path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/nvim-snippy",
+    url = "https://github.com/dcampos/nvim-snippy"
+  },
   ["nvim-treesitter"] = {
     loaded = true,
     path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/nvim-treesitter",
@@ -224,6 +239,11 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/vim-transparent",
     url = "https://github.com/tribela/vim-transparent"
+  },
+  ["vim-vsnip"] = {
+    loaded = true,
+    path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/vim-vsnip",
+    url = "https://github.com/hrsh7th/vim-vsnip"
   },
   ["yanky.nvim"] = {
     loaded = true,

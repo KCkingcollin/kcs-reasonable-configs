@@ -80,7 +80,7 @@ cmp.setup({
                 enable_in_context = function()
                     return true
                 end,
-                preselect_correct_word = true,
+                preselect_correct_word = false,
         },
     },
   },
