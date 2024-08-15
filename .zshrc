@@ -412,5 +412,6 @@ eval "$(dircolors -b)"
 alias ls='ls $LS_OPTIONS'
 
 export EDITOR=/bin/nvim
+export TERM=xterm-256color
 
 neofetch
