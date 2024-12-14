@@ -27,7 +27,7 @@ require('cmp_nvim_lsp').setup({
 
 require('mason').setup({})
 require('mason-lspconfig').setup({
-  ensure_installed = {'tsserver', 'rust_analyzer', 'ltex', 'bashls', 'lua_ls'},
+  ensure_installed = {'rust_analyzer', 'ltex', 'bashls', 'lua_ls'},
   handlers = {
     function(server_name)
       require('lspconfig')[server_name].setup({

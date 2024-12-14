@@ -1,6 +1,6 @@
 configuration {
     modes: [ combi ];
-	combi-modes: "drun,run,ssh,filebrowser,recursivebrowser";
+	combi-modes: "drun,run,ssh,web_search,filebrowser,recursivebrowser";
 	terminal: "foot";
     ssh-client: "ssh";
 	ssh-command: "{terminal} -e {ssh-client} {host} [-p {port}]";

@@ -73,7 +73,7 @@
     "format": "{}"
 },
 "clock": {
-    "timezone": "America/New_York",
+    "timezone": "$(timedatectl show -p Timezone --value)",
     "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
     "format": "{:%d-%m-%Y %H:%M}",
     "on-click": "flatpak run org.mozilla.firefox --new-window https://calendar.proton.me/"
