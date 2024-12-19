@@ -79,11 +79,6 @@ _G.packer_plugins = {
     path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/LuaSnip",
     url = "https://github.com/L3MON4D3/LuaSnip"
   },
-  ["auto-pairs"] = {
-    loaded = true,
-    path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/auto-pairs",
-    url = "https://github.com/jiangmiao/auto-pairs"
-  },
   ["cmp-buffer"] = {
     loaded = true,
     path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/cmp-buffer",
@@ -133,6 +128,11 @@ _G.packer_plugins = {
     loaded = true,
     path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/harpoon",
     url = "https://github.com/ThePrimeagen/harpoon"
+  },
+  ["lexima.vim"] = {
+    loaded = true,
+    path = "/home/kckingcollin/.local/share/nvim/site/pack/packer/start/lexima.vim",
+    url = "https://github.com/cohama/lexima.vim"
   },
   ["lsp-zero.nvim"] = {
     loaded = true,

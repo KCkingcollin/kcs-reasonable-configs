@@ -414,4 +414,7 @@ alias ls='ls $LS_OPTIONS'
 export EDITOR=/bin/nvim
 export TERM=xterm-256color
 
+export GOPATH=$HOME/go
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+
 neofetch

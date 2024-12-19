@@ -1,4 +1,6 @@
 vim.g.mapleader = " "
+vim.keymap.set("i", ",", ", ")
+vim.keymap.set("i", "<c-l>", [[<Esc>"+l]])
 vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 
 vim.keymap.set("n", "U", vim.cmd.redo)
@@ -52,20 +54,21 @@ vim.keymap.set("n", "<leader>mr", "<cmd>CellularAutomaton make_it_rain<CR>");
 -- vim.keymap.set("n", "<leader><leader>", function()
 --     vim.cmd("so")
 -- end)
-vim.keymap.set("n", "<leader>m", function ()
+vim.keymap.set("n", "<leader>m", function()
     vim.cmd("vsplit")
     vim.cmd("edit ~/.config/nvim/lua/kckingcollin/remap.lua")
 end)
 
 vim.keymap.set("n", "<leader>l", vim.diagnostic.goto_next)
 vim.keymap.set("n", "<leader>h", vim.diagnostic.goto_prev)
+-- vim.keymap.set("n", "<leader>i", ':Inspect<CR>')
 
 -- everyone but the normys will hate this
-vim.keymap.set({"n", "i", "v"}, "<C-s>", vim.cmd.w)
+vim.keymap.set({ "n", "i", "v" }, "<C-s>", vim.cmd.w)
 
-vim.keymap.set({"n", "i", "v"}, "<C-z>", vim.cmd.undo)
+vim.keymap.set({ "n", "i", "v" }, "<C-z>", vim.cmd.undo)
 
-vim.keymap.set({"n", "i", "v"}, "<C-y>", vim.cmd.redo)
+vim.keymap.set({ "n", "i", "v" }, "<C-y>", vim.cmd.redo)
 
 -- vim.keymap.set("n", "<LeftMouse>", "i<LeftMouse>")
 -- vim.keymap.set("v", "<LeftMouse>", "<S-i><LeftMouse>")
@@ -78,10 +81,10 @@ vim.keymap.set("i", "<C-v>", [[<Esc>"+p]])
 
 vim.keymap.set("i", "<C-f>", "<Esc>/")
 
-vim.keymap.set({"n","x"}, "p", "<Plug>(YankyPutAfter)")
-vim.keymap.set({"n","x"}, "P", "<Plug>(YankyPutBefore)")
-vim.keymap.set({"n","x"}, "gp", "<Plug>(YankyGPutAfter)")
-vim.keymap.set({"n","x"}, "gP", "<Plug>(YankyGPutBefore)")
+vim.keymap.set({ "n", "x" }, "p", "<Plug>(YankyPutAfter)")
+vim.keymap.set({ "n", "x" }, "P", "<Plug>(YankyPutBefore)")
+vim.keymap.set({ "n", "x" }, "gp", "<Plug>(YankyGPutAfter)")
+vim.keymap.set({ "n", "x" }, "gP", "<Plug>(YankyGPutBefore)")
 
 vim.keymap.set("n", "<c-p>", "<Plug>(YankyPreviousEntry)")
 vim.keymap.set("n", "<c-n>", "<Plug>(YankyNextEntry)")
@@ -92,9 +95,11 @@ vim.keymap.set('c', '<M-j>', '<down>')
 
 -- quick term em
 vim.api.nvim_set_keymap('n', '<leader>t', ':below 6sp<CR>:terminal<CR>i<CR>clear<CR>', { noremap = true, silent = true })
+-- vim.keymap.set('i', '<Esc>', '<C-\><C-n>')
 
 -- debugging
-vim.api.nvim_set_keymap('n', '<leader>9', ':lua require"dapui".toggle()<CR>:lua require"dap".continue()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>9', ':lua require"dapui".toggle()<CR>:lua require"dap".continue()<CR>',
+    { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>8', ':lua require"dapui".toggle()<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>1', ':lua require"dap".continue()<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>2', ':lua require("dapui").eval()<CR>', { noremap = true, silent = true })
@@ -104,4 +109,5 @@ vim.api.nvim_set_keymap('n', '<leader>5', ':lua require"dap".step_over()<CR>', {
 vim.api.nvim_set_keymap('n', '<leader>6', ':lua require"dap".step_into()<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>7', ':lua require"dap".step_out()<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>b', ':lua require"dap".toggle_breakpoint()<CR>', { noremap = true, silent = true })
-vim.api.nvim_set_keymap('n', '<leader>bb', 'lua require("dap").clear_breakpoints()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<leader>bb', 'lua require("dap").clear_breakpoints()<CR>',
+    { noremap = true, silent = true })
