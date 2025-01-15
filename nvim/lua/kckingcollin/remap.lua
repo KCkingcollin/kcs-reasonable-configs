@@ -48,6 +48,26 @@ vim.keymap.set(
     "oif err != nil {<CR>}<Esc>Oreturn err<Esc>"
 )
 
+-- C set up
+vim.keymap.set(
+    "n",
+    "<leader>C",
+    "i#include <stdio.h> <CR><CR>int main() {<CR>}<Esc>ko"
+)
+
+-- GO set up
+vim.keymap.set(
+    "n",
+    "<leader>GO",
+    "ipackage main <CR><CR>func main() {<CR>}<Esc>ko"
+)
+
+-- GO glsl set up
+vim.keymap.set(
+    "n",
+    "<leader>glc",
+    "ipackage main <CR><CR>import (<CR>\"github.com/KCkingcollin/go-help-func/glf\"<CR>)<CR><CR>func main() {<CR>}<Esc>ko"
+    )
 vim.keymap.set("n", "<leader>vpp", "<cmd>e ~/.dotfiles/nvim/.config/nvim/lua/theprimeagen/packer.lua<CR>");
 vim.keymap.set("n", "<leader>mr", "<cmd>CellularAutomaton make_it_rain<CR>");
 
@@ -95,7 +115,6 @@ vim.keymap.set('c', '<M-j>', '<down>')
 
 -- quick term em
 vim.api.nvim_set_keymap('n', '<leader>t', ':below 6sp<CR>:terminal<CR>i<CR>clear<CR>', { noremap = true, silent = true })
--- vim.keymap.set('i', '<Esc>', '<C-\><C-n>')
 
 -- debugging
 vim.api.nvim_set_keymap('n', '<leader>9', ':lua require"dapui".toggle()<CR>:lua require"dap".continue()<CR>',

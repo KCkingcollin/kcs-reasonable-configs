@@ -9,7 +9,19 @@ mytime() {
     "$@"
     end=$(date +%s%N)     # Nanoseconds since epoch
     elapsed=$((end - start))
-    echo "Elapsed time: $((elapsed / 1000)) µs"
+    if [ "$elapsed" -gt 1000 ]; then
+        if [ $((elapsed / 1000)) -gt 1000 ]; then
+            if [ $((elapsed / (1000 * 1000))) -gt 1000 ]; then
+                echo "Elapsed time: $((elapsed / (1000 * 1000 * 1000)))s"
+            else
+                echo "Elapsed time: $((elapsed / (1000 * 1000)))ms"
+            fi
+        else
+            echo "Elapsed time: $((elapsed / 1000))µs"
+        fi
+    else
+        echo "Elapsed time: $elapsedns"
+    fi
 }
 alias time='mytime'
 alias :q='exit'

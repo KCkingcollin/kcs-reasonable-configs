@@ -129,3 +129,8 @@ vim.api.nvim_create_autocmd("VimLeave", {
   pattern = "*",
   callback = enable_keybinding,
 })
+
+vim.api.nvim_create_autocmd("VimEnter", {
+    pattern = "*",
+    command = "tnoremap <Esc> <C-\\><C-n>"
+})

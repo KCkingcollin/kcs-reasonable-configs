@@ -1,7 +1,10 @@
 require'nvim-treesitter.configs'.setup {
   -- A list of parser names, or "all" (the five listed parsers should always be installed)
-  ensure_installed = { "bash", "javascript", "java", "html", "css", "typescript", "c", "lua", "vim", "vimdoc", "query", "rust" },
+  ensure_installed = { "go", "bash", "javascript", "java", "html", "css", "typescript", "c", "lua", "vim", "vimdoc", "query", "rust" },
 
+  -- tree_setter = {
+  --     enable = true
+  -- },
   -- Install parsers synchronously (only applied to `ensure_installed`)
   sync_install = false,
 
@@ -19,3 +22,10 @@ require'nvim-treesitter.configs'.setup {
     additional_vim_regex_highlighting = false,
   },
 }
+
+require('commasemi').setup({
+  leader = '<leader>', -- optional, defaults to <localleader>
+  keymaps = true,          -- optional, set to false to disable keymaps
+  commands = true          -- optional, set to false to disable commands
+})
+

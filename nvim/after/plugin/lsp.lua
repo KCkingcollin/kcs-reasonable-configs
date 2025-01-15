@@ -28,7 +28,7 @@ require('cmp_nvim_lsp').setup({
 
 require('mason').setup({})
 require('mason-lspconfig').setup({
-  ensure_installed = {'rust_analyzer', 'ltex', 'bashls', 'lua_ls'},
+  ensure_installed = {'rust_analyzer', 'ltex', 'bashls', 'lua_ls', 'glslls'},
   handlers = {
     function(server_name)
       require('lspconfig')[server_name].setup({
@@ -67,7 +67,33 @@ require('mason-lspconfig').setup({
         }
       })
   end,
+  glslls = function()
+      require('lspconfig').glslls.setup({
+          filetypes = { "glsl", "vert", "frag", "geom", "comp" },
+          flags = {
+              debounce_text_changes = 150,
+          },
+      })
+  end,
+  glsl_analyzer = function()
+      require("lspconfig").glsl_analyzer.setup({
+          filetypes = { "glsl", "vert", "frag", "geom", "comp" },
+          flags = {
+              debounce_text_changes = 150,
+          },
+      })
+  end,
      }
+})
+
+vim.filetype.add({
+    extension = {
+        vert = "glsl",
+        frag = "glsl",
+        geom = "glsl",
+        comp = "glsl",
+        glsl = "glsl",
+    },
 })
 
 local cmp = require('cmp')

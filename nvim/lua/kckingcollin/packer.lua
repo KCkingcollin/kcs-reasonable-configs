@@ -78,6 +78,13 @@ return require('packer').startup(function(use)
     use('hrsh7th/vim-vsnip')
     use('dcampos/nvim-snippy')
     use('dcampos/cmp-snippy')
-    -- use('jiangmiao/auto-pairs')
-    use('cohama/lexima.vim')
+    use {
+        "windwp/nvim-autopairs",
+        event = "InsertEnter",
+        config = function()
+            require("nvim-autopairs").setup {}
+        end
+    }
+    use('filNaj/tree-setter')
+    use('saifulapm/commasemi.nvim')
 end)
