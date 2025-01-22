@@ -12,15 +12,15 @@ mytime() {
     if [ "$elapsed" -gt 1000 ]; then
         if [ $((elapsed / 1000)) -gt 1000 ]; then
             if [ $((elapsed / (1000 * 1000))) -gt 1000 ]; then
-                echo "Elapsed time: $((elapsed / (1000 * 1000 * 1000)))s"
+                echo "Elapsed time: $((elapsed / (1000 * 1000 * 1000)))s + $(($((elapsed / (1000 * 1000))) - $(($((elapsed / (1000 * 1000 * 1000))) * 1000))))ms"
             else
-                echo "Elapsed time: $((elapsed / (1000 * 1000)))ms"
+                echo "Elapsed time: $((elapsed / (1000 * 1000)))ms + $(($((elapsed / 1000)) - $(($((elapsed / (1000 * 1000))) * 1000))))µs"
             fi
         else
-            echo "Elapsed time: $((elapsed / 1000))µs"
+            echo "Elapsed time: $((elapsed / 1000))µs + $(($elapsed - $(($((elapsed / 1000)) * 1000))))ns"
         fi
     else
-        echo "Elapsed time: $elapsedns"
+        echo "Elapsed time: $($elapsed)ns"
     fi
 }
 alias time='mytime'
