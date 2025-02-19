@@ -30,6 +30,8 @@ local function enable_keybinding()
   vim.fn.system("hyprctl keybind alt+k")
 end
 
+vim.o.scrollback = 100000
+
 vim.opt.guicursor = ""
 
 vim.opt.nu = true

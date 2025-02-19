@@ -24,7 +24,12 @@ mytime() {
     fi
 }
 alias time='mytime'
+closeAndSave() {
+    echo "cd $(pwd)" >> ~/.zhistory
+    exit
+}
 alias :q='exit'
+alias :wq='closeAndSave'
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
