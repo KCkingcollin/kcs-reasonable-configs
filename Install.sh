@@ -80,6 +80,7 @@ then
     cd kcs-reasonable-configs || return
 fi
 mv "$HOME/.config/nvim" "$HOME/.config/nvim.bac" 
+mv "$HOME/.config/fastfetch" "$HOME/.config/fastfetch.bac" 
 mv "$HOME/.config/kitty" "$HOME/.config/foot.bac" 
 mv "$HOME/.config/hypr" "$HOME/.config/hypr.bac" 
 mv "$HOME/.config/waybar" "$HOME/.config/waybar.bac" 
@@ -93,7 +94,7 @@ mv "$HOME/.gtkrc-2.0" "$HOME/.gtkrc-2.0.bac"
 
 mkdir "$HOME"/.config
 
-yes | cp -rf ./nvim ./kitty ./hypr ./waybar ./swaync ./rofi ./castle-shell "$HOME/.config/"
+yes | cp -rf ./nvim ./kitty ./hypr ./waybar ./swaync ./rofi ./castle-shell ./fastfetch "$HOME/.config/"
 
 yes | cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$HOME/"
 

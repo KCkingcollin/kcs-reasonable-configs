@@ -11,14 +11,18 @@
           "right": 4        
       },
       "color": {            
+          // "1": "#4D0099",
+          // "2": "#4D0099"
           "1": "blue",
           "2": "blue"
       }
   }, 
   "display": {
       "color": {
-          "keys": "blue",    // Key color
-          "title": "blue"     // Title color
+          // "keys":   "#4D0099",    // Key color
+          // "title":  "#4D0099"     // Title color
+          "keys":   "blue",    // Key color
+          "title":  "blue"     // Title color
       },
   }, 
   "modules": [
