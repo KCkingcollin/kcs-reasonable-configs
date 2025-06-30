@@ -2,42 +2,54 @@
 
 if [ "$USER" = 'root' ]
 then
-    pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim kitty gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs firefox go
+    pacman -Syyu --noconfirm linux-lts linux-lts-firmware sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim kitty gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs firefox go
     echo "You need to run this script as a sudo user NOT as root"
-    echo "Create a new account?"
+    echo "In a chroot?"
     read -rp "[Y/n]: " answer
     if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]
     then
-        read -rp "Name of the account?: " accountName
-        useradd -m "$accountName"
-        passwd "$accountName"
-        groupadd sudo
-        usermod -aG sudo "$accountName"
-        if [ "$(grep -o -m 1 "# %sudo" < /etc/sudoers)" = "# %sudo" ]
-        then
-            echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
-        fi
-        cd "/home/$accountName" || return
-        sudo -S -i -u "$accountName" git clone https://github.com/KCkingcollin/kcs-reasonable-configs
-        cd "/home/$accountName/kcs-reasonable-configs" || return
-        su -c "./Install.sh" "$accountName"
+        systemctl enable Networkmanager
+        systemctl enable gdm
+        echo "Done"
+        echo "Reboot into the new drive and run this script again in a tty after connecting to WiFi via gdm login screen"
         return
     else
-        read -rp "Username?: " accountName
-        groupadd sudo
-        usermod -aG sudo "$accountName"
-        if [ "$(grep -o -m 1 "# %sudo" < /etc/sudoers)" = "# %sudo" ]
+        echo "Create a new account?"
+        read -rp "[Y/n]: " answer
+        if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]
         then
-            echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
+            read -rp "Name of the account?: " accountName
+            useradd -m "$accountName"
+            passwd "$accountName"
+            groupadd sudo
+            usermod -aG sudo "$accountName"
+            if [ "$(grep -o -m 1 "# %sudo" < /etc/sudoers)" = "# %sudo" ]
+            then
+                echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
+            fi
+            cd "/home/$accountName" || return
+            sudo -S -i -u "$accountName" git clone https://github.com/KCkingcollin/kcs-reasonable-configs
+            cd "/home/$accountName/kcs-reasonable-configs" || return
+            su -c "./Install.sh" "$accountName"
+            return
+        else
+            echo "Provid the account usernemae you want to set the environment up with"
+            read -rp "Username?: " accountName
+            groupadd sudo
+            usermod -aG sudo "$accountName"
+            if [ "$(grep -o -m 1 "# %sudo" < /etc/sudoers)" = "# %sudo" ]
+            then
+                echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
+            fi
+            cd "/home/$accountName" || return
+            sudo -S -i -u "$accountName" git clone https://github.com/KCkingcollin/kcs-reasonable-configs
+            cd "/home/$accountName/kcs-reasonable-configs" || return
+            su -c "./Install.sh" "$accountName"
+            return
         fi
-        cd "/home/$accountName" || return
-        sudo -S -i -u "$accountName" git clone https://github.com/KCkingcollin/kcs-reasonable-configs
-        cd "/home/$accountName/kcs-reasonable-configs" || return
-        su -c "./Install.sh" "$accountName"
-        return
     fi
 else
-    sudo -S pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim kitty gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs firefox go
+    sudo -S pacman -Syyu --noconfirm linux-lts linux-lts-firmware sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim kitty gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs firefox go
 fi
 
 if [ "$(pacman -Q | grep -o -m 1 yay)" != "yay" ];
