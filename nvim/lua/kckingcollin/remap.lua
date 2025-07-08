@@ -116,7 +116,7 @@ vim.keymap.set('n', '<leader>h', function()
     if not has_diagnostics() then
         vim.cmd('normal! [s')
     else
-        vim.diagnostic.jump({count = 1, severity = getSeverity()})
+        vim.diagnostic.jump({count = -1, severity = getSeverity()})
     end
 end)
 
@@ -124,7 +124,7 @@ vim.keymap.set('n', '<leader>l', function()
     if not has_diagnostics() then
         vim.cmd('normal! ]s')
     else
-        vim.diagnostic.jump({count = -1, severity = getSeverity()})
+        vim.diagnostic.jump({count = 1, severity = getSeverity()})
     end
 end)
 
