@@ -8,8 +8,6 @@ vim.api.nvim_create_autocmd('LspAttach', {
     vim.keymap.set('n', 'K', function() vim.lsp.buf.hover() end, opts)
     vim.keymap.set('n', '<leader>vws', function() vim.lsp.buf.workspace_symbol() end, opts)
     vim.keymap.set('n', '<leader>vd', function() vim.diagnostic.open_float() end, opts)
-    vim.keymap.set('n', '[d', function() vim.diagnostic.goto_next() end, opts)
-    vim.keymap.set('n', ']d', function() vim.diagnostic.goto_prev() end, opts)
     vim.keymap.set('n', '<leader>vca', function() vim.lsp.buf.code_action() end, opts)
     vim.keymap.set('n', '<leader>vrr', function() vim.lsp.buf.references() end, opts)
     vim.keymap.set('n', '<leader>vrn', function() vim.lsp.buf.rename() end, opts)
@@ -28,63 +26,43 @@ require('cmp_nvim_lsp').setup({
 
 require('mason').setup({})
 require('mason-lspconfig').setup({
-  ensure_installed = {'rust_analyzer', 'ltex', 'bashls', 'lua_ls', 'glslls'},
-  handlers = {
-    function(server_name)
-      require('lspconfig')[server_name].setup({
-        capabilities = lsp_capabilities,
-        ltex = {
-            filetypes = {"*"},
-        },
-      })
-    end,
-    lua_ls = function()
-      require('lspconfig').lua_ls.setup({
-        capabilities = lsp_capabilities,
-        settings = {
-          Lua = {
-            runtime = {
-              version = 'LuaJIT'
-            },
-            diagnostics = {
-              globals = {'vim'},
-            },
-            workspace = {
-              library = {
-                vim.env.VIMRUNTIME,
-              }
-            },
-            format = {
-                insertSpaces = true,
-            },
-          },
-          golang = {
-              -- Format options
-              format = {
-                  insertSpaces = true,
-              },
-          },
-        }
-      })
-  end,
-  glslls = function()
-      require('lspconfig').glslls.setup({
-          filetypes = { "glsl", "vert", "frag", "geom", "comp" },
-          flags = {
-              debounce_text_changes = 150,
-          },
-      })
-  end,
-  glsl_analyzer = function()
-      require("lspconfig").glsl_analyzer.setup({
-          filetypes = { "glsl", "vert", "frag", "geom", "comp" },
-          flags = {
-              debounce_text_changes = 150,
-          },
-      })
-  end,
-     }
+    ensure_installed = {'bashls', 'lua_ls', 'glslls'},
 })
+
+vim.lsp.config(
+    "lua_ls", {
+        settings = {
+            Lua = {
+                runtime = {
+                    version = 'LuaJIT' -- Specifies the Lua runtime version
+                },
+                diagnostics = {
+                    globals = {'vim'}, -- This tells the LSP to recognize 'vim' as a global
+                },
+                workspace = {
+                    library = {
+                        vim.env.VIMRUNTIME, -- This points the LSP to the Neovim runtime files for definitions
+                    }
+                },
+                format = {
+                    insertSpaces = true,
+                },
+            },
+        }
+    },
+    "glslls", {
+        filetypes = { "glsl", "vert", "frag", "geom", "comp" },
+        flags = {
+            debounce_text_changes = 150,
+        },
+    },
+    "glsl_analyzer", {
+        filetypes = { "glsl", "vert", "frag", "geom", "comp" },
+        flags = {
+            debounce_text_changes = 150,
+        },
+    }
+)
 
 vim.filetype.add({
     extension = {

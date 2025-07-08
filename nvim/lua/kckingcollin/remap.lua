@@ -79,9 +79,32 @@ vim.keymap.set("n", "<leader>m", function()
     vim.cmd("edit ~/.config/nvim/lua/kckingcollin/remap.lua")
 end)
 
-vim.keymap.set("n", "<leader>l", vim.diagnostic.goto_next)
-vim.keymap.set("n", "<leader>h", vim.diagnostic.goto_prev)
--- vim.keymap.set("n", "<leader>i", ':Inspect<CR>')
+local function has_diagnostics(bufnr)
+    local diagnostics = vim.diagnostic.get(bufnr or 0)
+    return #diagnostics > 0
+end
+
+if has_diagnostics() then
+    print("Current buffer has diagnostics!")
+else
+    print("No diagnostics in the current buffer.")
+end
+
+vim.keymap.set('n', '<leader>h', function()
+    if has_diagnostics then
+        vim.cmd('normal! [s')
+    else
+        vim.diagnostic.jump({count = 1})
+    end
+end)
+
+vim.keymap.set('n', '<leader>l', function()
+    if has_diagnostics then
+        vim.cmd('normal! ]s')
+    else
+        vim.diagnostic.jump({count = -1})
+    end
+end)
 
 -- everyone but the normys will hate this
 vim.keymap.set({ "n", "i", "v" }, "<C-s>", vim.cmd.w)
