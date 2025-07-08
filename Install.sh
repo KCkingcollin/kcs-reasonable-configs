@@ -8,7 +8,7 @@ then
     read -rp "[Y/n]: " answer
     if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]
     then
-        systemctl enable Networkmanager
+        systemctl enable NetworkManager
         systemctl enable gdm
         grub-install --target=x86_64-efi --efi-directory=boot --bootloader-id=GRUB
         grub-mkconfig -o /boot/grub/grub.cfg
