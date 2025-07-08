@@ -79,16 +79,44 @@ vim.keymap.set("n", "<leader>m", function()
     vim.cmd("edit ~/.config/nvim/lua/kckingcollin/remap.lua")
 end)
 
-local function has_diagnostics(bufnr)
-    local diagnostics = vim.diagnostic.get(bufnr or 0)
+
+vim.diagnostic.config({
+    signs = true,
+    underline = true,
+    jump = {
+        float = true,
+    },
+})
+
+local function has_diagnostics()
+    local diagnostics = vim.diagnostic.get(0)
     return #diagnostics > 0
+end
+
+local function getSeverity()
+    local diagnostics = vim.diagnostic.get(0, {severity = vim.diagnostic.severity.ERROR})
+    if #diagnostics > 0 then
+        return vim.diagnostic.severity.ERROR
+    end
+    diagnostics = vim.diagnostic.get(0, {severity = vim.diagnostic.severity.WARN})
+    if #diagnostics > 0 then
+        return vim.diagnostic.severity.WARN
+    end
+    diagnostics = vim.diagnostic.get(0, {severity = vim.diagnostic.severity.INFO})
+    if #diagnostics > 0 then
+        return vim.diagnostic.severity.INFO
+    end
+    diagnostics = vim.diagnostic.get(0, {severity = vim.diagnostic.severity.HINT})
+    if #diagnostics > 0 then
+        return vim.diagnostic.severity.HINT
+    end
 end
 
 vim.keymap.set('n', '<leader>h', function()
     if not has_diagnostics() then
         vim.cmd('normal! [s')
     else
-        vim.diagnostic.jump({count = 1})
+        vim.diagnostic.jump({count = 1, severity = getSeverity()})
     end
 end)
 
@@ -96,7 +124,7 @@ vim.keymap.set('n', '<leader>l', function()
     if not has_diagnostics() then
         vim.cmd('normal! ]s')
     else
-        vim.diagnostic.jump({count = -1})
+        vim.diagnostic.jump({count = -1, severity = getSeverity()})
     end
 end)
 
