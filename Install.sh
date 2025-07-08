@@ -8,6 +8,8 @@ then
     read -rp "[Y/n]: " answer
     if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]
     then
+        echo "Set the root password"
+        passwd
         systemctl enable NetworkManager
         systemctl enable gdm
         grub-install --target=x86_64-efi --efi-directory=boot --bootloader-id=GRUB
