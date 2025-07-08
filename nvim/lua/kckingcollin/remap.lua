@@ -84,14 +84,8 @@ local function has_diagnostics(bufnr)
     return #diagnostics > 0
 end
 
-if has_diagnostics() then
-    print("Current buffer has diagnostics!")
-else
-    print("No diagnostics in the current buffer.")
-end
-
 vim.keymap.set('n', '<leader>h', function()
-    if has_diagnostics then
+    if not has_diagnostics() then
         vim.cmd('normal! [s')
     else
         vim.diagnostic.jump({count = 1})
@@ -99,7 +93,7 @@ vim.keymap.set('n', '<leader>h', function()
 end)
 
 vim.keymap.set('n', '<leader>l', function()
-    if has_diagnostics then
+    if not has_diagnostics() then
         vim.cmd('normal! ]s')
     else
         vim.diagnostic.jump({count = -1})
