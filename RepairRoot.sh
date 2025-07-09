@@ -17,6 +17,7 @@ function chrootInstall {
         git clone https://github.com/KCkingcollin/castle-shell
         cd castle-shell/color-checker || return
         sudo -S go build -o /usr/bin/color-checker
+        cd ../..
 
         sudo -S flatpak -y remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
         sudo -S flatpak override --filesystem="$HOME"/.themes
