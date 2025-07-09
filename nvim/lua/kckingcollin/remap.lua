@@ -98,18 +98,18 @@ local function getSeverity()
     if #diagnostics > 0 then
         return vim.diagnostic.severity.ERROR
     end
-    diagnostics = vim.diagnostic.get(0, {severity = vim.diagnostic.severity.WARN})
-    if #diagnostics > 0 then
-        return vim.diagnostic.severity.WARN
-    end
-    diagnostics = vim.diagnostic.get(0, {severity = vim.diagnostic.severity.INFO})
-    if #diagnostics > 0 then
-        return vim.diagnostic.severity.INFO
-    end
-    diagnostics = vim.diagnostic.get(0, {severity = vim.diagnostic.severity.HINT})
-    if #diagnostics > 0 then
-        return vim.diagnostic.severity.HINT
-    end
+    -- diagnostics = vim.diagnostic.get(0, {severity = vim.diagnostic.severity.WARN})
+    -- if #diagnostics > 0 then
+    --     return vim.diagnostic.severity.WARN
+    -- end
+    -- diagnostics = vim.diagnostic.get(0, {severity = vim.diagnostic.severity.INFO})
+    -- if #diagnostics > 0 then
+    --     return vim.diagnostic.severity.INFO
+    -- end
+    -- diagnostics = vim.diagnostic.get(0, {severity = vim.diagnostic.severity.HINT})
+    -- if #diagnostics > 0 then
+    --     return vim.diagnostic.severity.HINT
+    -- end
 end
 
 vim.keymap.set('n', '<leader>h', function()
