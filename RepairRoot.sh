@@ -20,9 +20,9 @@ function chrootInstall {
         cd ../..
 
         sudo -S flatpak -y remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
-        sudo -S flatpak override --filesystem="$HOME"/.themes
-        sudo -S flatpak override --filesystem="$HOME"/.icons
-        sudo -S flatpak override --filesystem="$HOME"/.gtkrc-2.0
+        sudo -S flatpak override --filesystem="$accountName"/.themes
+        sudo -S flatpak override --filesystem="$accountName"/.icons
+        sudo -S flatpak override --filesystem="$accountName"/.gtkrc-2.0
         sudo -S flatpak override --env=GTK_THEME=Adwaita-dark
         sudo -S flatpak override --env=ICON_THEME=Adwaita-dark
 
@@ -31,6 +31,8 @@ function chrootInstall {
     )"
     echo "Done"
 }
+
+export -f chrootInstall
 
 if [ "$USER" = 'root' ]; then
     # checking to make sure we are not in chroot

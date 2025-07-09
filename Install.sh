@@ -13,25 +13,19 @@ function chrootInstall {
     passwd "$accountName"
     groupadd sudo
     usermod -aG sudo "$accountName"
-    if [ "$(grep -o -m 1 "# %sudo" < /etc/sudoers)" = "# %sudo" ]
-    then
-        echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
-    fi
-    if [ "$(grep -o -m 1 "# [multilib]" < /etc/sudoers)" = "# [multilib]" ]
-    then
-        echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" > /etc/pacman.conf
-    fi
+    echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
+    echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" > /etc/pacman.conf
     cd "/home/$accountName" || return
-    sudo -S -i -u "$accountName" git clone https://github.com/KCkingcollin/kcs-reasonable-configs
-    cd "/home/$accountName/kcs-reasonable-configs" || return
 
     sudo -S -i -u "$accountName" "$(
         git clone https://aur.archlinux.org/yay.git
         cd yay || return
         makepkg -si --noconfirm
         cd ..
-
         yay -S --noconfirm hyprshot nvim-packer-git oh-my-zsh-git nwg-displays pamac-all
+
+        git clone https://github.com/KCkingcollin/kcs-reasonable-configs
+        cd "kcs-reasonable-configs" || return
 
         git clone https://github.com/KCkingcollin/castle-shell
         cd castle-shell/color-checker || return
@@ -39,30 +33,30 @@ function chrootInstall {
         cd ../..
 
         sudo -S flatpak -y remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
-        sudo -S flatpak override --filesystem="$HOME"/.themes
-        sudo -S flatpak override --filesystem="$HOME"/.icons
-        sudo -S flatpak override --filesystem="$HOME"/.gtkrc-2.0
+        sudo -S flatpak override --filesystem="$accountName"/.themes
+        sudo -S flatpak override --filesystem="$accountName"/.icons
+        sudo -S flatpak override --filesystem="$accountName"/.gtkrc-2.0
         sudo -S flatpak override --env=GTK_THEME=Adwaita-dark
         sudo -S flatpak override --env=ICON_THEME=Adwaita-dark
 
-        mv "$HOME/.config/nvim" "$HOME/.config/nvim.bac" 
-        mv "$HOME/.config/fastfetch" "$HOME/.config/fastfetch.bac" 
-        mv "$HOME/.config/kitty" "$HOME/.config/foot.bac" 
-        mv "$HOME/.config/hypr" "$HOME/.config/hypr.bac" 
-        mv "$HOME/.config/waybar" "$HOME/.config/waybar.bac" 
-        mv "$HOME/.config/swaync" "$HOME/.config/swaync.bac" 
-        mv "$HOME/.config/rofi" "$HOME/.config/rofi.bac" 
-        mv "$HOME/.config/castle-shell" "$HOME/.config/castle-shell.bac" 
-        mv "$HOME/.zshrc" "$HOME/.zshrc.bac" 
-        mv "$HOME/.themes" "$HOME/.themes.bac" 
-        mv "$HOME/.icons" "$HOME/.icons.bac" 
-        mv "$HOME/.gtkrc-2.0" "$HOME/.gtkrc-2.0.bac" 
+        mv "$accountName/.config/nvim" "$accountName/.config/nvim.bac" 
+        mv "$accountName/.config/fastfetch" "$accountName/.config/fastfetch.bac" 
+        mv "$accountName/.config/kitty" "$accountName/.config/foot.bac" 
+        mv "$accountName/.config/hypr" "$accountName/.config/hypr.bac" 
+        mv "$accountName/.config/waybar" "$accountName/.config/waybar.bac" 
+        mv "$accountName/.config/swaync" "$accountName/.config/swaync.bac" 
+        mv "$accountName/.config/rofi" "$accountName/.config/rofi.bac" 
+        mv "$accountName/.config/castle-shell" "$accountName/.config/castle-shell.bac" 
+        mv "$accountName/.zshrc" "$accountName/.zshrc.bac" 
+        mv "$accountName/.themes" "$accountName/.themes.bac" 
+        mv "$accountName/.icons" "$accountName/.icons.bac" 
+        mv "$accountName/.gtkrc-2.0" "$accountName/.gtkrc-2.0.bac" 
 
-        mkdir "$HOME"/.config
+        mkdir "$accountName"/.config
 
-        yes | cp -rf ./nvim ./kitty ./hypr ./waybar ./swaync ./rofi ./castle-shell ./fastfetch "$HOME/.config/"
+        yes | cp -rf ./nvim ./kitty ./hypr ./waybar ./swaync ./rofi ./castle-shell ./fastfetch "$accountName/.config/"
 
-        yes | cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$HOME/"
+        yes | cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$accountName/"
 
         sudo -S cp -rf ./switch-DEs.sh /usr/bin/switch-DEs
 
@@ -70,28 +64,28 @@ function chrootInstall {
 
         sudo -S cp -rf ./switch-DEs.service  /etc/systemd/system/
 
-        yes | cp -rf ./after.sh /"$HOME"/.config/hypr/
+        yes | cp -rf ./after.sh /"$accountName"/.config/hypr/
 
-        mv /"$HOME"/.config/hypr/hyprland.conf /"$HOME"/.config/hypr/hyprland.conf.bac
+        mv /"$accountName"/.config/hypr/hyprland.conf /"$accountName"/.config/hypr/hyprland.conf.bac
 
-        yes | cp -rf ./hyprland.conf.once /"$HOME"/.config/hypr/hyprland.conf
+        yes | cp -rf ./hyprland.conf.once /"$accountName"/.config/hypr/hyprland.conf
 
         sudo -S chsh -s /bin/zsh "$USER"
 
-        mkdir -p "$HOME/Pictures" 
-        cp ./background.jpg "$HOME/Pictures/background.jpg"
+        mkdir -p "$accountName/Pictures" 
+        cp ./background.jpg "$accountName/Pictures/background.jpg"
 
         nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 
         # make damn sure it gets the environment before running hyprland the first time
         systemctl --user import-environment
-
-        sudo -S bash -c 'echo "[User]                        
-        Session=hyprland
-        XSession=hyprland
-        Icon="$HOME"/.face
-        SystemAccount=false" > /var/lib/AccountsService/users/"$USER"'
     )"
+
+    echo "[User]
+Session=hyprland
+XSession=hyprland
+Icon=$accountName/.face
+SystemAccount=false" > /var/lib/AccountsService/users/"$accountName"
     echo "Done"
     echo "Reboot into the new drive"
 }
