@@ -2,7 +2,7 @@
 
 if [ "$USER" = 'root' ]
 then
-    pacman -Syyu --noconfirm linux-lts efibootmgr linux-firmware linux-lts-headers grub sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim kitty gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs firefox go
+    pacman -Syyu --noconfirm linux-lts arch-install-scripts efibootmgr linux-firmware linux-lts-headers grub sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim kitty gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs firefox go
     echo "You need to run this script as a sudo user NOT as root"
     echo "In a chroot?"
     read -rp "[Y/n]: " answer
@@ -14,6 +14,7 @@ then
         systemctl enable gdm
         grub-install --target=x86_64-efi --efi-directory=boot --bootloader-id=GRUB
         grub-mkconfig -o /boot/grub/grub.cfg
+        genfstab -U / >> /etc/fstab
         echo "Done"
         echo "Reboot into the new drive and run this script again in a tty after connecting to WiFi via gdm login screen"
         return
