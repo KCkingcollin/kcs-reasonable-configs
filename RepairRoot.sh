@@ -25,15 +25,18 @@ function configSetup {
     sudo -S go build -o /usr/bin/color-checker
     cd ../..
 
+    if ! [ "$(ls | grep -o -m 1 "/home/$userName")" = "/home/$userName" ]; then
+        mkdir /home/"$userName"
+        touch /home/"$userName"/.themes
+        touch /home/"$userName"/.icons
+        touch /home/"$userName"/.gtkrc-2
+    fi
     sudo -S flatpak -y remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
     sudo -S flatpak override --filesystem="$userName"/.themes
     sudo -S flatpak override --filesystem="$userName"/.icons
     sudo -S flatpak override --filesystem="$userName"/.gtkrc-2.0
     sudo -S flatpak override --env=GTK_THEME=Adwaita-dark
     sudo -S flatpak override --env=ICON_THEME=Adwaita-dark
-
-    # make damn sure it gets the environment before running hyprland the first time
-    systemctl --user import-environment
 }
 
 export -f chrootInstall
@@ -45,6 +48,7 @@ if [ "$USER" = 'root' ]; then
         cd kcs-reasonable-configs || return
         yes | cp -rf pacman* /etc/
     )
+    pacman -Syy --noconfirm archlinux-keyring
     echo "root dir?"
     read -rp " > " rootdir
     # checking to make sure we are not in chroot

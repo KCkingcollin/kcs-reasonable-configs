@@ -105,9 +105,6 @@ function configSetup {
 
     nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 
-    # make damn sure it gets the environment before running hyprland the first time
-    systemctl --user import-environment
-
     sudo -S bash -c echo '[User]                        
 Session=hyprland
 XSession=hyprland
@@ -189,4 +186,8 @@ fi
 
 "$(configSetup "$USER")"
 
+# make damn sure it gets the environment before running hyprland the first time
+systemctl --user import-environment
+
 sudo -S systemctl start switch-DEs.service
+
