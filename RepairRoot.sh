@@ -54,7 +54,7 @@ if [ "$USER" = 'root' ]; then
         mkdir oldfiles
         mkdir oldfiles/etc
         cd "$rootdir"/etc || return
-        if ! cp -R fstab passwd shadow default group* cron* local* NetworkManager pacman* sudo* ssh* ssl* hostname ../../oldfiles/etc/; then
+        if ! cp -R fstab passwd shadow default group* local* NetworkManager pacman* sudo* ssh* ssl* ../../oldfiles/etc/; then
             echo "couldn't copy some files, not attempting the whipe"
             return
         fi
