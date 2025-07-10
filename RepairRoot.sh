@@ -26,6 +26,7 @@ function configSetup {
     cd ../..
 
     if ! [ "$(ls | grep -o -m 1 "/home/$userName")" = "/home/$userName" ]; then
+        mkdir /home
         mkdir /home/"$userName"
         touch /home/"$userName"/.themes
         touch /home/"$userName"/.icons
