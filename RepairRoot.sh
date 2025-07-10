@@ -40,11 +40,10 @@ export -f chrootInstall
 export -f configSetup
 
 if [ "$USER" = 'root' ]; then
-    (
-        git clone https://github.com/KCkingcollin/kcs-reasonable-config
-        cd kcs-reasonable-configs || return
-        yes | cp -rf pacman* /etc/
-    )
+    git clone https://github.com/KCkingcollin/kcs-reasonable-config
+    cd kcs-reasonable-configs || return
+    yes | cp -rf pacman* /etc/
+    cd ..
     echo "root dir?"
     read -rp " > " rootdir
     # checking to make sure we are not in chroot
