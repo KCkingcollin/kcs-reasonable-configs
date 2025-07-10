@@ -59,7 +59,7 @@ if [ "$USER" = 'root' ]; then
         cd ..
         echo "About to whipe root and reintall, contenue?"
         read -rp "[Y/n]: " answer
-        if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ] then
+        if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
             for file in *; do
                 if [[ "$file" != *"home"* || "$file" != *"root"* || "$file" != *"dev"* || "$file" != *"boot"* ]]; then 
                     rm -r "$file"
