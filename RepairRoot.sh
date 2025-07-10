@@ -7,6 +7,9 @@ function chrootInstall {
     grub-mkconfig -o /boot/grub/grub.cfg
 
     read -rp "Name of the account?: " accountName
+    useradd -m "$accountName"
+    groupadd sudo
+    usermod -aG sudo "$accountName"
     sudo -S -i -u "$accountName" "$(configSetup "$accountName")"
     echo "Done"
     echo "In chroot, done fixing"
@@ -32,7 +35,7 @@ function configSetup {
         touch /home/"$userName"/.icons
         touch /home/"$userName"/.gtkrc-2
     fi
-    sudo -S flatpak -y remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
+    sudo -S flatpak remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
     sudo -S flatpak override --filesystem="$userName"/.themes
     sudo -S flatpak override --filesystem="$userName"/.icons
     sudo -S flatpak override --filesystem="$userName"/.gtkrc-2.0

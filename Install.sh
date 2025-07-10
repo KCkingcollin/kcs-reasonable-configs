@@ -46,7 +46,7 @@ function configSetup {
     sudo -S go build -o /usr/bin/color-checker
     cd ../..
 
-    sudo -S flatpak -y remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
+    sudo -S flatpak remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
     sudo -S flatpak override --filesystem="$userName"/.themes
     sudo -S flatpak override --filesystem="$userName"/.icons
     sudo -S flatpak override --filesystem="$userName"/.gtkrc-2.0
