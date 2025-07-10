@@ -49,6 +49,8 @@ if [ "$USER" = 'root' ]; then
     read -rp " > " rootdir
     # checking to make sure we are not in chroot
     if ! [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
+        cd "$rootdir" || return
+        cd ..
         mkdir oldfiles
         mkdir oldfiles/etc
         cd "$rootdir"/etc || return
