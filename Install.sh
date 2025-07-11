@@ -13,8 +13,8 @@ function cloneRepo {
         fi
         git clone -b "$gitRepo" https://github.com/KCkingcollin/kcs-reasonable-configs
         cd kcs-reasonable-configs || return
-        archPackages="$(pwd)/arch-packages"
-        aurPackages="$(pwd)/aur-packages"
+        archPackages="$(tr '\n' ' ' < "$(pwd)/arch-packages")"
+        aurPackages="$(tr '\n' ' ' < "$(pwd)/aur-packages")"
     fi
 }
 
@@ -74,7 +74,7 @@ function extraPackages {
             cd ..
         fi
 
-        yay -S --noconfirm "$(cat "$aurPackages")"
+        yay -S --noconfirm "$aurPackages"
 
         if [ "$(ls | grep -o -m 1 "castle-shell")" = "castle-shell" ];
         then 
@@ -154,7 +154,7 @@ function main {
             answer="$(pwd)"
             cloneRepo
             cp -rf pacman* /etc/
-            pacstrap -K "$answer" "$(cat "$archPackages")"
+            pacstrap -K "$answer" "$archPackages"
             export -f chrootSetup extraPackages configSetup
             username="$(arch-chroot "$answer" /bin/bash -c chrootSetup | tail -n 1)"
             arch-chroot "$answer" /bin/bash -c extraPackages "$username"
@@ -176,7 +176,7 @@ function main {
                 cloneRepo
                 cp -rf pacman* /etc/
                 accountName="$(createAccount | tail -n 1)"
-                pacman -Syyu --noconfirm "$(cat "$archPackages")"
+                pacman -Syyu --noconfirm "$archPackages"
                 extraPackages "$accountName"
                 configSetup "$accountName"
                 sudo -S -i -u "$accountName" systemctl --user import-environment
@@ -186,7 +186,7 @@ function main {
                 cloneRepo
                 cp -rf pacman* /etc/
                 accountName="$(getAccount | tail -n 1)"
-                pacman -Syyu --noconfirm "$(cat "$archPackages")"
+                pacman -Syyu --noconfirm "$archPackages"
                 extraPackages "$accountName"
                 configSetup "$accountName"
                 sudo -S -i -u "$accountName" systemctl --user import-environment
