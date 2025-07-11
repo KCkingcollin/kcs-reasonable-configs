@@ -135,6 +135,8 @@ function configSetup {
             yes | cp ./background.jpg "$userName/Pictures/background.jpg"
         fi
 
+        sudo -S rate-mirrors --allow-root --save /etc/pacman.d/mirrorlist arch
+
         nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 
         sudo -S bash -c echo '[User]                        
