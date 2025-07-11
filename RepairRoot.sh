@@ -40,7 +40,7 @@ if [ "$USER" = 'root' ]; then
             rm -r boot/*
         fi
         cd ..
-        pacstrap -K "$rootdir" "$archPackages"
+        pacstrap -K "$rootdir" $(cat "$archPackages")
         cd oldfiles || return
         if ! cp -Rf etc ../"$rootdir"/; then
             echo "couldn't copy some files, not attempting to install"
