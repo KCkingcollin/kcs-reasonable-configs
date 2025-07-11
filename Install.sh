@@ -148,6 +148,9 @@ function main {
         echo "Clean install arch?"
         read -rp "[Y/n]: " answer
         if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
+            cloneRepo
+            cp -rf pacman* /etc/
+            pacman -Syy --noconfirm archlinux-keyring
             echo "Install dir?"
             read -rp " > " answer
             cd "$answer" || return
