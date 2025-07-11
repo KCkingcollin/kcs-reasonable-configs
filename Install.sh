@@ -152,16 +152,17 @@ function main {
             cp -rf pacman* /etc/
             pacman -Syy --noconfirm archlinux-keyring
             echo "Install dir?"
-            read -rp " > " answer
-            cd "$answer" || return
-            answer="$(pwd)"
+            read -rp " > " rootdir
+            cd "$rootdir" || return
+            rootdir="$(pwd)"
+            cd - || return
             cloneRepo
             cp -rf pacman* /etc/
-            pacstrap -K "$answer" $(cat "$archPackages")
+            pacstrap -K "$rootdir" $(cat "$archPackages")
             export -f chrootSetup extraPackages configSetup
-            username="$(arch-chroot "$answer" /bin/bash -c chrootSetup | tail -n 1)"
-            arch-chroot "$answer" /bin/bash -c extraPackages "$username"
-            arch-chroot "$answer" /bin/bash -c configSetup "$username"
+            username="$(arch-chroot "$rootdir" /bin/bash -c chrootSetup | tail -n 1)"
+            arch-chroot "$rootdir" /bin/bash -c extraPackages "$username"
+            arch-chroot "$rootdir" /bin/bash -c configSetup "$username"
             return
         fi
         if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then

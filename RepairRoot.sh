@@ -17,6 +17,7 @@ if [ "$USER" = 'root' ]; then
     read -rp " > " rootdir
     cd "$rootdir" || return
     rootdir="$(pwd)"
+    cd - || return
     # checking to make sure we are not in chroot
     if ! [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
         cd "$rootdir" || return
