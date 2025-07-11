@@ -11,7 +11,7 @@ fi
 
 if [ "$USER" = 'root' ]; then
     cloneRepo
-    cp -rf pacman* /etc/
+    cp -rf etc/* /etc/
     pacman -Syy --noconfirm archlinux-keyring
     echo "root dir?"
     read -rp " > " rootdir

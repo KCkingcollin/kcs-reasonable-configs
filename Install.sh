@@ -152,15 +152,13 @@ function main {
         read -rp "[Y/n]: " answer
         if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
             cloneRepo
-            cp -rf pacman* /etc/
+            cp -rf etc/* /etc/
             pacman -Syy --noconfirm archlinux-keyring
             echo "Install dir?"
             read -rp " > " rootdir
             cd "$rootdir" || return
             rootdir="$(pwd)"
             cd - || return
-            cloneRepo
-            cp -rf pacman* /etc/
             pacstrap -K "$rootdir" $(cat "$archPackages")
             export -f chrootSetup extraPackages configSetup
             username="$(arch-chroot "$rootdir" /bin/bash -c chrootSetup | tail -n 1)"
@@ -170,7 +168,7 @@ function main {
         fi
         if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
             cloneRepo
-            cp -rf pacman* /etc/
+            cp -rf etc/* /etc/
             userName="$(chrootSetup | tail -n 1)"
             extraPackages "$userName"
             configSetup "$userName"
@@ -181,7 +179,7 @@ function main {
             if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]
             then
                 cloneRepo
-                cp -rf pacman* /etc/
+                cp -rf etc/* /etc/
                 accountName="$(createAccount | tail -n 1)"
                 pacman -Syyu --noconfirm $(cat "$archPackages")
                 extraPackages "$accountName"
@@ -191,7 +189,7 @@ function main {
                 return
             else
                 cloneRepo
-                cp -rf pacman* /etc/
+                cp -rf etc/* /etc/
                 accountName="$(getAccount | tail -n 1)"
                 pacman -Syyu --noconfirm $(cat "$archPackages")
                 extraPackages "$accountName"
