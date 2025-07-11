@@ -5,6 +5,7 @@ function chrootInstall {
     passwd
     systemctl enable NetworkManager
     systemctl enable gdm
+    pacman -Syyu --noconfirm
     grub-install --target=x86_64-efi --efi-directory=boot --bootloader-id=GRUB
     grub-mkconfig -o /boot/grub/grub.cfg
     genfstab -U / >> /etc/fstab
@@ -14,15 +15,14 @@ function chrootInstall {
     groupadd sudo
     usermod -aG sudo "$accountName"
     echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
-    echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" > /etc/pacman.conf
     cd "/home/$accountName" || return
     sudo -S -i -u "$accountName" "$(configSetup "$accountName")"
     echo "Done"
-    echo "Reboot into the new drive"
 }
 
 function configSetup {
     userName=$1
+    cd "/home/$userName" || return
     if [ "$(pacman -Q | grep -o -m 1 yay)" != "yay" ];
     then
         if [ "$(ls | grep -o -m 1 "yay")" = "yay" ];
@@ -35,8 +35,7 @@ function configSetup {
         cd ..
     fi
 
-    yay -S --noconfirm hyprshot nvim-packer-git oh-my-zsh-git nwg-displays pamac-all
-
+    yay -S --noconfirm "$(cat yay-packages)"
     if [ "$(ls | grep -o -m 1 "castle-shell")" = "castle-shell" ];
     then 
         sudo -S rm -r ./castle-shell/
@@ -47,9 +46,9 @@ function configSetup {
     cd ../..
 
     sudo -S flatpak remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
-    sudo -S flatpak override --filesystem="$userName"/.themes
-    sudo -S flatpak override --filesystem="$userName"/.icons
-    sudo -S flatpak override --filesystem="$userName"/.gtkrc-2.0
+    sudo -S flatpak override --filesystem="/home/$userName"/.themes
+    sudo -S flatpak override --filesystem="/home/$userName"/.icons
+    sudo -S flatpak override --filesystem="/home/$userName"/.gtkrc-2.0
     sudo -S flatpak override --env=GTK_THEME=Adwaita-dark
     sudo -S flatpak override --env=ICON_THEME=Adwaita-dark
 
@@ -123,11 +122,11 @@ then
         echo "Install dir?"
         read -rp " > " answer
         (
-            git clone https://github.com/KCkingcollin/kcs-reasonable-config
+            git clone https://github.com/KCkingcollin/kcs-reasonable-configs
             cd kcs-reasonable-configs || return
             yes | cp -rf pacman* /etc/
         )
-        pacstrap -K "$answer" linux-lts arch-install-scripts os-prober efibootmgr linux-firmware linux-lts-headers grub sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim kitty gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs firefox go wget
+        pacstrap -K "$answer" "$(cat packages)"
         arch-chroot "$answer" /bin/bash -c chrootInstall
         return
     fi
@@ -181,7 +180,7 @@ then
         fi
     fi
 else
-    sudo -S pacman -Syyu --noconfirm sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim kitty gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs firefox go
+    sudo -S pacman -Syyu --noconfirm "$(cat packages)"
 fi
 
 "$(configSetup "$USER")"

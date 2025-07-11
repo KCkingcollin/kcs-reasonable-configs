@@ -1,22 +1,29 @@
 #!/bin/bash
 
 function chrootInstall {
+    echo "Set the root password"
+    passwd
     systemctl enable NetworkManager
     systemctl enable gdm
+    pacman -Syyu --noconfirm
     grub-install --target=x86_64-efi --efi-directory=boot --bootloader-id=GRUB
     grub-mkconfig -o /boot/grub/grub.cfg
-
-    read -rp "Name of the account?: " accountName
+    genfstab -U / >> /etc/fstab
+    read -rp "Name of the account (make sure its the same as the old name)?: " accountName
     useradd -m "$accountName"
+    passwd "$accountName"
     groupadd sudo
     usermod -aG sudo "$accountName"
+    echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
+    cd "/home/$accountName" || return
+    chsh -s /bin/zsh "$accountName"
     sudo -S -i -u "$accountName" "$(configSetup "$accountName")"
     echo "Done"
-    echo "In chroot, done fixing"
 }
 
 function configSetup {
     userName=$1
+    cd "/home/$userName" || return
     git clone https://aur.archlinux.org/yay.git
     cd yay || return
     makepkg -si --noconfirm
@@ -36,9 +43,9 @@ function configSetup {
         touch /home/"$userName"/.gtkrc-2
     fi
     sudo -S flatpak remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
-    sudo -S flatpak override --filesystem="$userName"/.themes
-    sudo -S flatpak override --filesystem="$userName"/.icons
-    sudo -S flatpak override --filesystem="$userName"/.gtkrc-2.0
+    sudo -S flatpak override --filesystem="/home/$userName"/.themes
+    sudo -S flatpak override --filesystem="/home/$userName"/.icons
+    sudo -S flatpak override --filesystem="/home/$userName"/.gtkrc-2.0
     sudo -S flatpak override --env=GTK_THEME=Adwaita-dark
     sudo -S flatpak override --env=ICON_THEME=Adwaita-dark
 }
@@ -62,7 +69,7 @@ if [ "$USER" = 'root' ]; then
         mkdir oldfiles
         mkdir oldfiles/etc
         cd "$rootdir"/etc || return
-        if ! cp -R fstab passwd shadow default group* local* NetworkManager pacman* sudo* ssh* ssl* ../../oldfiles/etc/; then
+        if ! cp -R fstab group* local* NetworkManager pacman* sudo* ssh* ssl* ../../oldfiles/etc/; then
             echo "couldn't copy some files, not attempting the whipe"
             return
         fi
@@ -78,7 +85,7 @@ if [ "$USER" = 'root' ]; then
             rm -r boot/*
         fi
         cd ..
-        pacstrap -K "$rootdir" linux-lts arch-install-scripts os-prober efibootmgr linux-firmware linux-lts-headers grub sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim kitty gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs firefox go wget
+        pacstrap -K "$answer" base linux-lts btop timeshift arch-install-scripts os-prober efibootmgr linux-firmware linux-lts-headers grub sudo hyprland hyprpaper waybar swaync playerctl polkit-gnome gnome-keyring pipewire wireplumber xdg-desktop-portal-hyprland otf-geist-mono-nerd otf-font-awesome pavucontrol nm-connection-editor networkmanager blueman git base-devel flatpak nemo rofi-wayland neovim kitty gdm cpio meson cmake zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch kdeconnect npm gtk2 gtk3 gtk4 hyprwayland-scanner gnome-control-center python xdg-desktop-portal xdg-desktop-portal-gtk xdg-user-dirs firefox go wget
         cd oldfiles || return
         if ! cp -Rf etc ../"$rootdir"/; then
             echo "couldn't copy some files, not attempting to install"
