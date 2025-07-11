@@ -54,3 +54,6 @@ xdg-user-dirs
 firefox
 go
 wget
+pacman-contrib
+parallel
+cronie

@@ -15,6 +15,7 @@ function cloneRepo {
         cd kcs-reasonable-configs || return
         archPackages="$(pwd)/arch-packages"
         aurPackages="$(pwd)/aur-packages"
+        pwd
     fi
 }
 
@@ -28,7 +29,6 @@ function createAccount {
     then
         echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
     fi
-    cd "/home/$accountName" || return
     echo "$accountName"
 }
 
@@ -41,7 +41,6 @@ function getAccount {
     then
         echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
     fi
-    cd "/home/$accountName" || return
     echo "$accountName"
 }
 
@@ -60,7 +59,7 @@ function chrootSetup {
 function extraPackages {
     userName=$1
     function commands {
-        cloneRepo
+        cd "$(cloneRepo | tail -n 1)" || return
 
         if [ "$(pacman -Q | grep -o -m 1 yay)" != "yay" ];
         then
@@ -92,7 +91,7 @@ function extraPackages {
         sudo -S flatpak override --env=GTK_THEME=Adwaita-dark
         sudo -S flatpak override --env=ICON_THEME=Adwaita-dark
     }
-    sudo -S -i -u "$userName" "$(commands)"
+    sudo -S -i -u "$userName" $(commands)
 }
 
 function configSetup {
@@ -115,21 +114,24 @@ function configSetup {
         mv "$userName/.gtkrc-2.0" "$userName/.gtkrc-2.0.bac" 
 
         mkdir "$userName"/.config
-        cp -rf ./nvim ./kitty ./hypr ./waybar ./swaync ./rofi ./castle-shell ./fastfetch "$userName/.config/"
-        cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$userName/"
-        cp -rf pacman* /etc/
+        yes | cp -rf config/* "$userName/.config/"
+        sudo -S cp -rf config/* "/root/.config/"
+        yes | cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$userName/"
+        sudo -S cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "/root/"
+        sudo -S cp -rf etc/* /etc/
         sudo -S cp -rf ./switch-DEs.sh /usr/bin/switch-DEs
         sudo -S cp -rf ./theme-check.service ./waybar-hyprland.service /usr/lib/systemd/user/
         sudo -S cp -rf ./switch-DEs.service  /etc/systemd/system/
-        cp -rf ./after.sh /"$userName"/.config/hypr/
+        yes | cp -rf ./after.sh /"$userName"/.config/hypr/
         mv /"$userName"/.config/hypr/hyprland.conf /"$userName"/.config/hypr/hyprland.conf.bac
-        cp -rf ./hyprland.conf.once /"$userName"/.config/hypr/hyprland.conf
+        yes | cp -rf ./hyprland.conf.once /"$userName"/.config/hypr/hyprland.conf
         sudo -S chsh -s /bin/zsh "$userName"
+        sudo -S chsh -s /bin/zsh root
 
         if [ "$(ls "$userName/Pictures/" | grep -o -m 1 "background.jpg")" != "background.jpg" ];
         then
             mkdir -p "$userName/Pictures" 
-            cp ./background.jpg "$userName/Pictures/background.jpg"
+            yes | cp ./background.jpg "$userName/Pictures/background.jpg"
         fi
 
         nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
@@ -140,7 +142,7 @@ XSession=hyprland
 Icon="$userName"/.face
 SystemAccount=false' > /var/lib/AccountsService/users/"$userName"
     }
-    sudo -S -i -u "$userName" "$(commands)"
+    sudo -S -i -u "$userName" $(commands)
 }
 
 function main {
