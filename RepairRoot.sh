@@ -12,7 +12,7 @@ fi
 if [ "$USER" = 'root' ]; then
     cloneRepo
     cp -rf etc/* /etc/
-    pacman -Syy --noconfirm archlinux-keyring
+    pacman -Syy --noconfirm archlinux-keyring arch-install-scripts
     echo "root dir?"
     read -rp " > " rootdir
     cd "$rootdir" || return

@@ -153,7 +153,7 @@ function main {
         if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
             cloneRepo
             cp -rf etc/* /etc/
-            pacman -Syy --noconfirm archlinux-keyring
+            pacman -Syy --noconfirm archlinux-keyring arch-install-scripts
             echo "Install dir?"
             read -rp " > " rootdir
             cd "$rootdir" || return
