@@ -1,9 +1,5 @@
 #!/bin/bash
 
-gitRepo=""
-archPackages=""
-aurPackages=""
-
 function cloneRepo {
     if [ "$(git status | grep -o -m 1 "On branch")" != "On branch" ]
     then
@@ -19,28 +15,28 @@ function cloneRepo {
 }
 
 function createAccount {
-    read -rp "Name of the account?: " accountName
-    useradd -m "$accountName"
-    passwd "$accountName"
+    read -rp "Name of the account?: " userName
+    useradd -m "$userName"
+    passwd "$userName"
     groupadd sudo
-    usermod -aG sudo "$accountName"
+    usermod -aG sudo "$userName"
     if [ "$(grep -o -m 1 "# %sudo" < /etc/sudoers)" = "# %sudo" ]
     then
         echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
     fi
-    echo "$accountName"
+    echo "$userName"
 }
 
 function getAccount {
     echo "Provid the account usernemae you want to set the environment up with"
-    read -rp "Username?: " accountName
+    read -rp "Username?: " userName
     groupadd sudo
-    usermod -aG sudo "$accountName"
+    usermod -aG sudo "$userName"
     if [ "$(grep -o -m 1 "# %sudo" < /etc/sudoers)" = "# %sudo" ]
     then
         echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
     fi
-    echo "$accountName"
+    echo "$userName"
 }
 
 function chrootSetup {
@@ -57,7 +53,6 @@ function chrootSetup {
 }
 
 function extraPackages {
-    userName=$1
     cloneRepo
     chown -R "$userName":"$userName" .
 
@@ -67,13 +62,14 @@ function extraPackages {
         then 
             rm -r ./yay/
         fi
-        sudo -S -i -u "$userName" git clone https://aur.archlinux.org/yay.git
+        git clone https://aur.archlinux.org/yay.git
+        chown -R "$userName":"$userName" .
         cd yay || return
-        sudo -S -i -u "$userName" makepkg -si --noconfirm
+        sudo -S -u "$userName" makepkg -si --noconfirm
         cd ..
     fi
 
-    sudo -S -i -u "$userName" yay -S --noconfirm $(cat "$aurPackages")
+    sudo -S -u "$userName" yay -S --noconfirm $(cat "$aurPackages")
 
     if [ "$(ls | grep -o -m 1 "castle-shell")" = "castle-shell" ];
     then 
@@ -93,8 +89,7 @@ function extraPackages {
 }
 
 function configSetup {
-    userName=$1
-    homeDir=~"$userName"
+    homeDir=$(awk -F: -v v="$userName" '{if ($1==v) print $6}' /etc/passwd)
     cd "$homeDir" || return
     cloneRepo
     chown -R "$userName":"$userName" .
@@ -112,7 +107,7 @@ function configSetup {
     mv "$homeDir"/.icons "$homeDir"/.icons.bac 
     mv "$homeDir"/.gtkrc-2.0 "$homeDir"/.gtkrc-2.0.bac 
 
-    sudo -S -i -u "$userName" mkdir "$homeDir"/.config
+    sudo -S -u "$userName" mkdir "$homeDir"/.config
     yes | cp -rfp config/* /home/"$userName/.config/"
     yes | cp -rfp ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 /home/"$userName/"
     yes | cp -rfp ./after.sh "$homeDir"/.config/hypr/
@@ -128,15 +123,15 @@ function configSetup {
     chsh -s /bin/zsh "$userName"
     chsh -s /bin/zsh root
 
-    if [ "$(ls "$userName/Pictures/" | grep -o -m 1 "background.jpg")" != "background.jpg" ];
+    if [ "$(ls "$homeDir/Pictures/" | grep -o -m 1 "background.jpg")" != "background.jpg" ];
     then
-        sudo -S -i -u "$userName" mkdir -p "$homeDir"/Pictures
+        sudo -S -u "$userName" mkdir -p "$homeDir"/Pictures
         yes | cp -fp ./background.jpg "$homeDir"/Pictures/background.jpg
     fi
 
     rate-mirrors --allow-root --save /etc/pacman.d/mirrorlist arch
 
-    sudo -S -i -u "$userName" nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
+    sudo -S -u "$userName" nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
     nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
 
     bash -c echo '[User]                        
@@ -157,37 +152,41 @@ function main {
             pacman -Syy --noconfirm archlinux-keyring arch-install-scripts
             lsblk
 
-            echo "Root partition (needs to be btrfs)?"
-            read -rp " > " partRoot
-            mount "$partRoot"
-            cd /mnt || return
-            btrfs subvolume create @
-            cd /
-            umount /mnt
-            mount -t btrfs -o subvol=@ "$partRoot" /mnt
-
-            echo "Home partition (leave blank to use the same partition)?"
-            read -rp " > " partHome
-            mkdir /mnt/home
-            if [ "$partHome" == "" ]; then
+            echo "Auto mount partitions?"
+            read -rp "[Y/n]: " answer
+            if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
+                echo "Root partition (needs to be btrfs)?"
+                read -rp " > " partRoot
+                mount "$partRoot" /mnt
                 cd /mnt || return
-                btrfs subvolume create @home
-                mount -t btrfs -o subvol=@home "$partHome" /mnt/home
-            else
-                mount "$partHome" /mnt/home
-            fi
+                btrfs subvolume create @
+                cd /
+                umount /mnt
+                mount -t btrfs -o subvol=@ "$partRoot" /mnt
 
-            echo "Boot partition?"
-            read -rp " > " partBoot
-            mkdir -p /mnt/boot/efi
-            mount "$partBoot" /mnt/boot/efi
+                echo "Home partition (leave blank to use the same partition)?"
+                read -rp " > " partHome
+                mkdir /mnt/home
+                if [ "$partHome" == "" ]; then
+                    cd /mnt || return
+                    btrfs subvolume create @home
+                    mount -t btrfs -o subvol=@home "$partRoot" /mnt/home
+                else
+                    mount "$partHome" /mnt/home
+                fi
+
+                echo "Boot partition?"
+                read -rp " > " partBoot
+                mkdir -p /mnt/boot/efi
+                mount "$partBoot" /mnt/boot/efi
+            fi
 
             pacstrap -K /mnt $(cat "$archPackages")
             export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount
-            export gitRepo
+            export gitRepo userName
             userName="$(arch-chroot /mnt /bin/bash -c chrootSetup | tail -n 1)"
-            arch-chroot /mnt /bin/bash -c extraPackages "$userName"
-            arch-chroot /mnt /bin/bash -c configSetup "$userName"
+            arch-chroot /mnt /bin/bash -c extraPackages
+            arch-chroot /mnt /bin/bash -c configSetup
             return
         fi
         if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
@@ -204,21 +203,21 @@ function main {
             then
                 cloneRepo
                 cp -rf etc/* /etc/
-                accountName="$(createAccount | tail -n 1)"
+                createAccount
                 pacman -Syyu --noconfirm $(cat "$archPackages")
-                extraPackages "$accountName"
-                configSetup "$accountName"
-                sudo -S -i -u "$accountName" systemctl --user import-environment
+                extraPackages "$userName"
+                configSetup "$userName"
+                sudo -S -u "$userName" systemctl --user import-environment
                 systemctl start switch-DEs.service
                 return
             else
                 cloneRepo
                 cp -rf etc/* /etc/
-                accountName="$(getAccount | tail -n 1)"
+                getAccount
                 pacman -Syyu --noconfirm $(cat "$archPackages")
-                extraPackages "$accountName"
-                configSetup "$accountName"
-                sudo -S -i -u "$accountName" systemctl --user import-environment
+                extraPackages "$userName"
+                configSetup "$userName"
+                sudo -S -u "$userName" systemctl --user import-environment
                 systemctl start switch-DEs.service
                 return
             fi
