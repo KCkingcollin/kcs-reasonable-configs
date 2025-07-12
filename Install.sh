@@ -162,7 +162,7 @@ function main {
             rootdir="$(pwd)"
             cd - || return
             pacstrap -K "$rootdir" $(cat "$archPackages")
-            export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount
+            export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount archPackages aurPackages gitRepo
             username="$(arch-chroot "$rootdir" /bin/bash -c chrootSetup | tail -n 1)"
             arch-chroot "$rootdir" /bin/bash -c extraPackages "$username"
             arch-chroot "$rootdir" /bin/bash -c configSetup "$username"
