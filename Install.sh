@@ -28,7 +28,7 @@ function createAccount {
 }
 
 function getAccount {
-    echo "Provid the account usernemae you want to set the environment up with"
+    print "Provid the account usernemae you want to set the environment up with"
     read -rp "Username?: " userName
     groupadd sudo
     usermod -aG sudo "$userName"
@@ -40,7 +40,7 @@ function getAccount {
 }
 
 function chrootSetup {
-    echo "Set the root password"
+    print "Set the root password"
     passwd
     systemctl enable NetworkManager
     systemctl enable gdm
@@ -192,9 +192,10 @@ function main {
         if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
             cloneRepo
             cp -rf etc/* /etc/
+            pacman -Syyu --noconfirm $(cat "$archPackages")
             userName="$(chrootSetup | tail -n 1)"
-            extraPackages "$userName"
-            configSetup "$userName"
+            extraPackages
+            configSetup
             return
         else
             echo "Create a new account?"
@@ -203,20 +204,20 @@ function main {
             then
                 cloneRepo
                 cp -rf etc/* /etc/
-                createAccount
+                userName="$(createAccount | tail -n 1)"
                 pacman -Syyu --noconfirm $(cat "$archPackages")
-                extraPackages "$userName"
-                configSetup "$userName"
+                extraPackages
+                configSetup
                 sudo -S -u "$userName" systemctl --user import-environment
                 systemctl start switch-DEs.service
                 return
             else
                 cloneRepo
                 cp -rf etc/* /etc/
-                getAccount
+                userName="$(getAccount | tail -n 1)"
                 pacman -Syyu --noconfirm $(cat "$archPackages")
-                extraPackages "$userName"
-                configSetup "$userName"
+                extraPackages
+                configSetup
                 sudo -S -u "$userName" systemctl --user import-environment
                 systemctl start switch-DEs.service
                 return
