@@ -153,18 +153,41 @@ function main {
         if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
             cloneRepo
             cp -rf etc/* /etc/
+            cd /
             pacman -Syy --noconfirm archlinux-keyring arch-install-scripts
-            echo "Install dir?"
-            read -rp " > " rootdir
-            cd "$rootdir" || return
-            rootdir="$(pwd)"
-            cd - || return
-            pacstrap -K "$rootdir" $(cat "$archPackages")
+            lsblk
+
+            echo "Root partition (needs to be btrfs)?"
+            read -rp " > " partRoot
+            mount "$partRoot"
+            cd /mnt || return
+            btrfs subvolume create @
+            cd /
+            umount /mnt
+            mount -t btrfs -o subvol=@ "$partRoot" /mnt
+
+            echo "Home partition (leave blank to use the same partition)?"
+            read -rp " > " partHome
+            mkdir /mnt/home
+            if [ "$partHome" == "" ]; then
+                cd /mnt || return
+                btrfs subvolume create @home
+                mount -t btrfs -o subvol=@home "$partHome" /mnt/home
+            else
+                mount "$partHome" /mnt/home
+            fi
+
+            echo "Boot partition?"
+            read -rp " > " partBoot
+            mkdir -p /mnt/boot/efi
+            mount "$partBoot" /mnt/boot/efi
+
+            pacstrap -K /mnt $(cat "$archPackages")
             export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount
             export gitRepo
-            username="$(arch-chroot "$rootdir" /bin/bash -c chrootSetup | tail -n 1)"
-            arch-chroot "$rootdir" /bin/bash -c extraPackages "$username"
-            arch-chroot "$rootdir" /bin/bash -c configSetup "$username"
+            userName="$(arch-chroot /mnt /bin/bash -c chrootSetup | tail -n 1)"
+            arch-chroot /mnt /bin/bash -c extraPackages "$userName"
+            arch-chroot /mnt /bin/bash -c configSetup "$userName"
             return
         fi
         if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
