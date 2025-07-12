@@ -224,8 +224,8 @@ function main {
             fi
         fi
     else
-        echo "Need to run as super user"
-        sudo -S "$(main)"
+        echo "Need to run root"
+        return
     fi
 }
 
