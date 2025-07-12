@@ -57,3 +57,4 @@ wget
 pacman-contrib
 parallel
 cronie
+grub-btrfs
