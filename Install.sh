@@ -15,7 +15,6 @@ function cloneRepo {
         cd kcs-reasonable-configs || return
         archPackages="$(pwd)/arch-packages"
         aurPackages="$(pwd)/aur-packages"
-        pwd
     fi
 }
 
@@ -59,93 +58,92 @@ function chrootSetup {
 
 function extraPackages {
     userName=$1
-    function commands {
-        cd "$(cloneRepo | tail -n 1)" || return
+    cloneRepo
+    chown -R "$userName":"$userName" .
 
-        if [ "$(pacman -Q | grep -o -m 1 yay)" != "yay" ];
-        then
-            if [ "$(ls | grep -o -m 1 "yay")" = "yay" ];
-            then 
-                sudo -S rm -r ./yay/
-            fi
-            git clone https://aur.archlinux.org/yay.git
-            cd yay || return
-            makepkg -si --noconfirm
-            cd ..
-        fi
-
-        yay -S --noconfirm $(cat "$aurPackages")
-
-        if [ "$(ls | grep -o -m 1 "castle-shell")" = "castle-shell" ];
+    if [ "$(pacman -Q | grep -o -m 1 yay)" != "yay" ];
+    then
+        if [ "$(ls | grep -o -m 1 "yay")" = "yay" ];
         then 
-            sudo -S rm -r ./castle-shell/
+            rm -r ./yay/
         fi
-        git clone https://github.com/KCkingcollin/castle-shell
-        cd castle-shell/color-checker || return
-        sudo -S go build -o /usr/bin/color-checker
-        cd ../..
+        sudo -S -i -u "$userName" git clone https://aur.archlinux.org/yay.git
+        cd yay || return
+        sudo -S -i -u "$userName" makepkg -si --noconfirm
+        cd ..
+    fi
 
-        sudo -S flatpak remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
-        sudo -S flatpak override --filesystem="/home/$userName"/.themes
-        sudo -S flatpak override --filesystem="/home/$userName"/.icons
-        sudo -S flatpak override --filesystem="/home/$userName"/.gtkrc-2.0
-        sudo -S flatpak override --env=GTK_THEME=Adwaita-dark
-        sudo -S flatpak override --env=ICON_THEME=Adwaita-dark
-    }
-    sudo -S -i -u "$userName" $(commands)
+    sudo -S -i -u "$userName" yay -S --noconfirm $(cat "$aurPackages")
+
+    if [ "$(ls | grep -o -m 1 "castle-shell")" = "castle-shell" ];
+    then 
+        rm -r ./castle-shell/
+    fi
+    git clone https://github.com/KCkingcollin/castle-shell
+    cd castle-shell/color-checker || return
+    go build -o /usr/bin/color-checker
+    cd ../..
+
+    flatpak remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
+    flatpak override --filesystem="/home/$userName"/.themes
+    flatpak override --filesystem="/home/$userName"/.icons
+    flatpak override --filesystem="/home/$userName"/.gtkrc-2.0
+    flatpak override --env=GTK_THEME=Adwaita-dark
+    flatpak override --env=ICON_THEME=Adwaita-dark
 }
 
 function configSetup {
     userName=$1
-    function commands {
-        cd "/home/$userName" || return
-        cloneRepo
+    homeDir=~"$userName"
+    cd "$homeDir" || return
+    cloneRepo
+    chown -R "$userName":"$userName" .
 
-        mv "$userName/.config/nvim" "$userName/.config/nvim.bac" 
-        mv "$userName/.config/fastfetch" "$userName/.config/fastfetch.bac" 
-        mv "$userName/.config/kitty" "$userName/.config/foot.bac" 
-        mv "$userName/.config/hypr" "$userName/.config/hypr.bac" 
-        mv "$userName/.config/waybar" "$userName/.config/waybar.bac" 
-        mv "$userName/.config/swaync" "$userName/.config/swaync.bac" 
-        mv "$userName/.config/rofi" "$userName/.config/rofi.bac" 
-        mv "$userName/.config/castle-shell" "$userName/.config/castle-shell.bac" 
-        mv "$userName/.zshrc" "$userName/.zshrc.bac" 
-        mv "$userName/.themes" "$userName/.themes.bac" 
-        mv "$userName/.icons" "$userName/.icons.bac" 
-        mv "$userName/.gtkrc-2.0" "$userName/.gtkrc-2.0.bac" 
+    mv "$homeDir"/.config/nvim "$homeDir"/.config/nvim.bac 
+    mv "$homeDir"/.config/fastfetch "$homeDir"/.config/fastfetch.bac 
+    mv "$homeDir"/.config/kitty "$homeDir"/.config/foot.bac 
+    mv "$homeDir"/.config/hypr "$homeDir"/.config/hypr.bac 
+    mv "$homeDir"/.config/waybar "$homeDir"/.config/waybar.bac 
+    mv "$homeDir"/.config/swaync "$homeDir"/.config/swaync.bac 
+    mv "$homeDir"/.config/rofi "$homeDir"/.config/rofi.bac 
+    mv "$homeDir"/.config/castle-shell "$homeDir"/.config/castle-shell.bac 
+    mv "$homeDir"/.zshrc "$homeDir"/.zshrc.bac 
+    mv "$homeDir"/.themes "$homeDir"/.themes.bac 
+    mv "$homeDir"/.icons "$homeDir"/.icons.bac 
+    mv "$homeDir"/.gtkrc-2.0 "$homeDir"/.gtkrc-2.0.bac 
 
-        mkdir "$userName"/.config
-        yes | cp -rf config/* "$userName/.config/"
-        sudo -S cp -rf config/* "/root/.config/"
-        yes | cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$userName/"
-        sudo -S cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "/root/"
-        sudo -S cp -rf etc/* /etc/
-        sudo -S cp -rf ./switch-DEs.sh /usr/bin/switch-DEs
-        sudo -S cp -rf ./theme-check.service ./waybar-hyprland.service /usr/lib/systemd/user/
-        sudo -S cp -rf ./switch-DEs.service  /etc/systemd/system/
-        yes | cp -rf ./after.sh /"$userName"/.config/hypr/
-        mv /"$userName"/.config/hypr/hyprland.conf /"$userName"/.config/hypr/hyprland.conf.bac
-        yes | cp -rf ./hyprland.conf.once /"$userName"/.config/hypr/hyprland.conf
-        sudo -S chsh -s /bin/zsh "$userName"
-        sudo -S chsh -s /bin/zsh root
+    sudo -S -i -u "$userName" mkdir "$homeDir"/.config
+    yes | cp -rfp config/* /home/"$userName/.config/"
+    yes | cp -rfp ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 /home/"$userName/"
+    yes | cp -rfp ./after.sh "$homeDir"/.config/hypr/
+    mv "$homeDir"/.config/hypr/hyprland.conf "$homeDir"/.config/hypr/hyprland.conf.bac
+    yes | cp -rfp ./hyprland.conf.once "$homeDir"/.config/hypr/hyprland.conf
 
-        if [ "$(ls "$userName/Pictures/" | grep -o -m 1 "background.jpg")" != "background.jpg" ];
-        then
-            mkdir -p "$userName/Pictures" 
-            yes | cp ./background.jpg "$userName/Pictures/background.jpg"
-        fi
+    cp -rf config/* /root/.config/
+    cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 /root/
+    cp -rf etc/* /etc/
+    cp -rf ./switch-DEs.sh /usr/bin/switch-DEs
+    cp -rf ./theme-check.service ./waybar-hyprland.service /usr/lib/systemd/user/
+    cp -rf ./switch-DEs.service  /etc/systemd/system/
+    chsh -s /bin/zsh "$userName"
+    chsh -s /bin/zsh root
 
-        sudo -S rate-mirrors --allow-root --save /etc/pacman.d/mirrorlist arch
+    if [ "$(ls "$userName/Pictures/" | grep -o -m 1 "background.jpg")" != "background.jpg" ];
+    then
+        sudo -S -i -u "$userName" mkdir -p "$homeDir"/Pictures
+        yes | cp -fp ./background.jpg "$homeDir"/Pictures/background.jpg
+    fi
 
-        nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
+    rate-mirrors --allow-root --save /etc/pacman.d/mirrorlist arch
 
-        sudo -S bash -c echo '[User]                        
-Session=hyprland
-XSession=hyprland
-Icon="$userName"/.face
-SystemAccount=false' > /var/lib/AccountsService/users/"$userName"
-    }
-    sudo -S -i -u "$userName" $(commands)
+    sudo -S -i -u "$userName" nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
+    nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
+
+    bash -c echo '[User]                        
+    Session=hyprland
+    XSession=hyprland
+    Icon="$userName"/.face
+    SystemAccount=false' > /var/lib/AccountsService/users/"$userName"
 }
 
 function main {
@@ -163,7 +161,7 @@ function main {
             cd - || return
             pacstrap -K "$rootdir" $(cat "$archPackages")
             export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount
-            export archPackages aurPackages gitRepo
+            export gitRepo
             username="$(arch-chroot "$rootdir" /bin/bash -c chrootSetup | tail -n 1)"
             arch-chroot "$rootdir" /bin/bash -c extraPackages "$username"
             arch-chroot "$rootdir" /bin/bash -c configSetup "$username"
