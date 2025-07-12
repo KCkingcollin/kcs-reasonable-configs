@@ -28,7 +28,7 @@ function createAccount {
 }
 
 function getAccount {
-    print "Provid the account usernemae you want to set the environment up with"
+    echo "Provid the account usernemae you want to set the environment up with" > $(tty)
     read -rp "Username?: " userName
     groupadd sudo
     usermod -aG sudo "$userName"
@@ -40,7 +40,9 @@ function getAccount {
 }
 
 function chrootSetup {
-    print "Set the root password"
+    cloneRepo
+    cp -rf etc/* /etc/
+    echo "Set the root password" > $(tty)
     passwd
     systemctl enable NetworkManager
     systemctl enable gdm
@@ -107,6 +109,19 @@ function configSetup {
     mv "$homeDir"/.icons "$homeDir"/.icons.bac 
     mv "$homeDir"/.gtkrc-2.0 "$homeDir"/.gtkrc-2.0.bac 
 
+    mv /root/.config/nvim /root/.config/nvim.bac 
+    mv /root/.config/fastfetch /root/.config/fastfetch.bac 
+    mv /root/.config/kitty /root/.config/foot.bac 
+    mv /root/.config/hypr /root/.config/hypr.bac 
+    mv /root/.config/waybar /root/.config/waybar.bac 
+    mv /root/.config/swaync /root/.config/swaync.bac 
+    mv /root/.config/rofi /root/.config/rofi.bac 
+    mv /root/.config/castle-shell /root/.config/castle-shell.bac 
+    mv /root/.zshrc /root/.zshrc.bac 
+    mv /root/.themes /root/.themes.bac 
+    mv /root/.icons /root/.icons.bac 
+    mv /root/.gtkrc-2.0 /root/.gtkrc-2.0.bac 
+
     sudo -S -u "$userName" mkdir "$homeDir"/.config
     yes | cp -rfp config/* /home/"$userName/.config/"
     yes | cp -rfp ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 /home/"$userName/"
@@ -116,7 +131,6 @@ function configSetup {
 
     cp -rf config/* /root/.config/
     cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 /root/
-    cp -rf etc/* /etc/
     cp -rf ./switch-DEs.sh /usr/bin/switch-DEs
     cp -rf ./theme-check.service ./waybar-hyprland.service /usr/lib/systemd/user/
     cp -rf ./switch-DEs.service  /etc/systemd/system/
@@ -189,10 +203,9 @@ function main {
             arch-chroot /mnt /bin/bash -c configSetup
             return
         fi
+        cloneRepo
+        pacman -Syyu --noconfirm $(cat "$archPackages")
         if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
-            cloneRepo
-            cp -rf etc/* /etc/
-            pacman -Syyu --noconfirm $(cat "$archPackages")
             userName="$(chrootSetup | tail -n 1)"
             extraPackages
             configSetup
@@ -202,29 +215,18 @@ function main {
             read -rp "[Y/n]: " answer
             if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]
             then
-                cloneRepo
-                cp -rf etc/* /etc/
                 userName="$(createAccount | tail -n 1)"
-                pacman -Syyu --noconfirm $(cat "$archPackages")
-                extraPackages
-                configSetup
-                sudo -S -u "$userName" systemctl --user import-environment
-                systemctl start switch-DEs.service
-                return
             else
-                cloneRepo
-                cp -rf etc/* /etc/
                 userName="$(getAccount | tail -n 1)"
-                pacman -Syyu --noconfirm $(cat "$archPackages")
-                extraPackages
-                configSetup
-                sudo -S -u "$userName" systemctl --user import-environment
-                systemctl start switch-DEs.service
-                return
             fi
+            extraPackages
+            configSetup
+            sudo -S -u "$userName" systemctl --user import-environment
+            systemctl start switch-DEs.service
+            return
         fi
     else
-        echo "Need to run root"
+        echo "Need to run as root"
         return
     fi
 }
