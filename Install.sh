@@ -179,18 +179,20 @@ function main {
                 mount "$partRoot" /mnt
                 cd /mnt || return
                 btrfs subvolume create @
-                cd /
-                umount /mnt
-                mount -t btrfs -o subvol=@ "$partRoot" /mnt
 
                 echo "Home partition (leave blank to use the same partition)?"
                 read -rp " > " partHome
-                mkdir /mnt/home
                 if [ "$partHome" == "" ]; then
-                    cd /mnt || return
                     btrfs subvolume create @home
+                    cd /
+                    umount /mnt
+                    mount -t btrfs -o subvol=@ "$partRoot" /mnt
+                    mkdir /mnt/home
                     mount -t btrfs -o subvol=@home "$partRoot" /mnt/home
                 else
+                    cd /
+                    umount /mnt
+                    mount -t btrfs -o subvol=@ "$partRoot" /mnt
                     mount "$partHome" /mnt/home
                 fi
 
@@ -205,7 +207,7 @@ function main {
             export gitRepo userName
             userName="$(arch-chroot /mnt /bin/bash -c chrootSetup | tail -n 1)"
             echo "Name of the machine?"
-            read -rp "[Y/n]: " answer
+            read -rp " > " answer
             echo "$answer" > /mnt/etc/hostname
             echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
             echo "KEYMAP=us" > /etc/vconsole.conf
