@@ -40,8 +40,9 @@ function getAccount {
 }
 
 function chrootSetup {
-    cloneRepo
-    cp -rf etc/* /etc/
+    ln -sf /usr/share/zoneinfo/Region/City /etc/localtime
+    hwclock --systohc
+    locale-gen
     echo "Set the root password" > $(tty)
     passwd
     systemctl enable NetworkManager
@@ -71,7 +72,7 @@ function extraPackages {
         cd ..
     fi
 
-    sudo -S -u "$userName" yay -S --noconfirm $(cat "$aurPackages")
+    sudo -S -u "$userName" yay -S --noconfirm --nodeps $(cat "$aurPackages")
 
     if [ "$(ls | grep -o -m 1 "castle-shell")" = "castle-shell" ];
     then 
@@ -161,7 +162,11 @@ function main {
         read -rp "[Y/n]: " answer
         if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
             cloneRepo
-            cp -rf etc/* /etc/
+            echo "Replace repos with arch repos?"
+            read -rp "[Y/n]: " answer
+            if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
+                cp -rf etc/* /etc/
+            fi
             cd /
             pacman -Syy --noconfirm archlinux-keyring arch-install-scripts
             lsblk
@@ -199,12 +204,25 @@ function main {
             export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount
             export gitRepo userName
             userName="$(arch-chroot /mnt /bin/bash -c chrootSetup | tail -n 1)"
+            echo "Name of the machine?"
+            read -rp "[Y/n]: " answer
+            echo "$answer" > /mnt/etc/hostname
+            echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
+            echo "KEYMAP=us" > /etc/vconsole.conf
             arch-chroot /mnt /bin/bash -c extraPackages
             arch-chroot /mnt /bin/bash -c configSetup
             return
         fi
         cloneRepo
-        pacman -Syyu --noconfirm $(cat "$archPackages")
+        echo "Replace repos with arch repos?"
+        read -rp "[Y/n]: " answer
+        if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
+            cp -rf etc/* /etc/
+            pacman -Syy --noconfirm archlinux-keyring
+            pacman -Syyu --noconfirm --nodeps $(cat "$archPackages")
+        else
+            pacman -Syyu --noconfirm $(cat "$archPackages")
+        fi
         if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
             userName="$(chrootSetup | tail -n 1)"
             extraPackages
