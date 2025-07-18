@@ -2,7 +2,7 @@
 Description=Theme Checker
 
 [Service]
-ExecStart=/bin/python /usr/bin/color-checker
+ExecStart=/usr/bin/color-checker
 Restart=never
 
 [Install]

@@ -3,6 +3,33 @@
 
 # Path to your oh-my-zsh installation.
 export ZSH="/usr/share/oh-my-zsh"
+mytime() {
+    local start end elapsed
+    start=$(date +%s%N)   # Nanoseconds since epoch
+    "$@"
+    end=$(date +%s%N)     # Nanoseconds since epoch
+    elapsed=$((end - start))
+    if [ "$elapsed" -gt 1000 ]; then
+        if [ $((elapsed / 1000)) -gt 1000 ]; then
+            if [ $((elapsed / (1000 * 1000))) -gt 1000 ]; then
+                echo "Elapsed time: $((elapsed / (1000 * 1000 * 1000)))s + $(($((elapsed / (1000 * 1000))) - $(($((elapsed / (1000 * 1000 * 1000))) * 1000))))ms"
+            else
+                echo "Elapsed time: $((elapsed / (1000 * 1000)))ms + $(($((elapsed / 1000)) - $(($((elapsed / (1000 * 1000))) * 1000))))µs"
+            fi
+        else
+            echo "Elapsed time: $((elapsed / 1000))µs + $(($elapsed - $(($((elapsed / 1000)) * 1000))))ns"
+        fi
+    else
+        echo "Elapsed time: $($elapsed)ns"
+    fi
+}
+alias time='mytime'
+closeAndSave() {
+    echo "cd $(pwd)" >> ~/.zhistory
+    exit
+}
+alias :q='exit'
+alias :wq='closeAndSave'
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -402,5 +429,10 @@ eval "$(dircolors -b)"
 alias ls='ls $LS_OPTIONS'
 
 export EDITOR=/bin/nvim
+export TERM=xterm-256color
 
-neofetch
+export GOPATH=$HOME/go
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+
+clear
+fastfetch
