@@ -20,35 +20,25 @@ if [ "$USER" = 'root' ]; then
     cd - || return
     # checking to make sure we are not in chroot
     if ! [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
+        echo "About to whipe root and reinstall (home and root folders will not be whiped, and etc will be coppied into oldetc), contenue?"
+        read -rp "[Y/n]: " answer
         cd "$rootdir" || return
-        cd ..
-        mkdir oldfiles
-        mkdir oldfiles/etc
-        cd "$rootdir"/etc || return
-        if ! cp -R fstab group* local* NetworkManager pacman* sudo* ssh* ssl* ../../oldfiles/etc/; then
+        if ! cp -R etc oldetc; then
             echo "couldn't copy some files, not attempting the whipe"
             return
         fi
-        cd ..
-        echo "About to whipe root and reinstall, contenue?"
-        read -rp "[Y/n]: " answer
         if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
             for file in *; do
-                if [[ "$file" != *"home"* && "$file" != *"root"* && "$file" != *"dev"* && "$file" != *"boot"* ]]; then 
+                if [[ "$file" != *"home"* && "$file" != *"root"* && "$file" != *"dev"* && "$file" != *"oldetc"* ]]; then 
                     rm -r "$file"
                 fi
             done
-            rm -r boot/*
         fi
         cd ..
         pacstrap -K "$rootdir" $(cat "$archPackages")
-        cd oldfiles || return
-        if ! cp -Rf etc ../"$rootdir"/; then
-            echo "couldn't copy some files, not attempting to install"
-            return
-        fi
-        cd ..
-        export -f chrootSetup extraPackages
+        genfstab -U "$rootdir" >> "$rootdir"/etc/fstab
+        export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount
+        export gitRepo userName
         username="$(arch-chroot "$answer" /bin/bash -c chrootSetup | tail -n 1)"
         arch-chroot "$answer" /bin/bash -c extraPackages "$username"
     else

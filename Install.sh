@@ -40,6 +40,7 @@ function getAccount {
 }
 
 function chrootSetup {
+    genfstab -U / >> /etc/fstab
     ln -sf /usr/share/zoneinfo/Region/City /etc/localtime
     hwclock --systohc
     locale-gen
@@ -51,7 +52,6 @@ function chrootSetup {
     pacman -Syyu --noconfirm
     grub-install --target=x86_64-efi --efi-directory=boot/efi --bootloader-id=GRUB
     grub-mkconfig -o /boot/grub/grub.cfg
-    genfstab -U / >> /etc/fstab
     createAccount
 }
 
@@ -132,6 +132,7 @@ function configSetup {
     yes | cp -rfp ./hyprland.conf.once "$homeDir"/.config/hypr/hyprland.conf
 
     cp -rf config/* /root/.config/
+    mv /root/.config/nvim/lua/user /root/.config/nvim/lua/root
     cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 /root/
     cp -rf ./switch-DEs.sh /usr/bin/switch-DEs
     cp -rf ./theme-check.service ./waybar-hyprland.service /usr/lib/systemd/user/
@@ -177,9 +178,14 @@ function main {
             if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
                 echo "Root partition (needs to be btrfs)?"
                 read -rp " > " partRoot
-                mount "$partRoot" /mnt
-                cd /mnt || return
-                btrfs subvolume create @
+                if [ "$partRoot" == "" ]; then
+                    echo "No root provided, stopping installation"
+                    return
+                else
+                    mount "$partRoot" /mnt
+                    cd /mnt || return
+                    btrfs subvolume create @
+                fi
 
                 echo "Home partition (leave blank to use the same partition)?"
                 read -rp " > " partHome
@@ -200,7 +206,22 @@ function main {
                 echo "Boot partition?"
                 read -rp " > " partBoot
                 mkdir -p /mnt/boot/efi
-                mount "$partBoot" /mnt/boot/efi
+                if [ "$partBoot" == "" ]; then
+                    echo "Bios boot is not supported, need a fat32 efi partition"
+                    return
+                else
+                    mount "$partBoot" /mnt/boot/efi
+                fi
+
+                echo "Swap partition?"
+                read -rp " > " partSwap
+                if [ "$partSwap" == "" ]; then
+                    echo "Swap file not yet supported, continuing without swap"
+                    swapoff -a
+                else
+                    swapoff -a
+                    swapon "$partSwap"
+                fi
             fi
 
             pacstrap -K /mnt $(cat "$archPackages")
