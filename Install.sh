@@ -132,6 +132,7 @@ function configSetup {
     yes | cp -rfp ./hyprland.conf.once "$homeDir"/.config/hypr/hyprland.conf
 
     cp -rf config/* /root/.config/
+    cp -rf etc/* /etc/
     mv /root/.config/nvim/lua/user /root/.config/nvim/lua/root
     cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 /root/
     cp -rf ./switch-DEs.sh /usr/bin/switch-DEs
