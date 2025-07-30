@@ -200,6 +200,7 @@ function main {
                     cd /
                     umount /mnt
                     mount -t btrfs -o subvol=@ "$partRoot" /mnt
+                    mkdir /mnt/home
                     mount "$partHome" /mnt/home
                 fi
 

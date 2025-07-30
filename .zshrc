@@ -24,12 +24,23 @@ mytime() {
     fi
 }
 alias time='mytime'
+
 closeAndSave() {
     echo "cd $(pwd)" >> ~/.zhistory
     exit
 }
 alias :q='exit'
 alias :wq='closeAndSave'
+
+function ranger {
+    tempfile="$(mktemp -t tmp.XXXXXX)"
+    /usr/bin/ranger --choosedir="$tempfile" "${@:-$(pwd)}"
+    if [[ -f "$tempfile" ]] && [[ "$(cat -- "$tempfile")" != "$(echo -n `pwd`)" ]]; then
+        cd -- "$(cat "$tempfile")" || return
+    fi
+    rm -f -- "$tempfile"
+}
+alias r='ranger'
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
