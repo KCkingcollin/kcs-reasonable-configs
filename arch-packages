@@ -6,6 +6,8 @@ arch-install-scripts
 os-prober
 efibootmgr
 linux-firmware
+sof-firmware
+sof-tools
 linux-lts-headers
 grub
 sudo
@@ -17,6 +19,9 @@ playerctl
 polkit-gnome
 gnome-keyring
 pipewire
+pipewire-alsa
+pipewire-pulse
+pipewire-jack
 wireplumber
 xdg-desktop-portal-hyprland
 otf-geist-mono-nerd
