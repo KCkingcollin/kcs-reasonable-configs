@@ -124,9 +124,9 @@ function configSetup {
     mv /root/.gtkrc-2.0 /root/.gtkrc-2.0.bac 
 
     sudo -S -u "$userName" mkdir "$homeDir"/.config
-    yes | cp -rfp config/* /home/"$userName/.config/"
+    yes | cp -rfp config/* "$homeDir"/.config/
     mv "$homeDir"/.config/nvim/lua/user "$homeDir"/.config/nvim/lua/"$userName"
-    yes | cp -rfp ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 /home/"$userName"/
+    yes | cp -rfp ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$homeDir"/
     yes | cp -rfp ./after.sh "$homeDir"/.config/hypr/
     mv "$homeDir"/.config/hypr/hyprland.conf "$homeDir"/.config/hypr/hyprland.conf.bac
     yes | cp -rfp ./hyprland.conf.once "$homeDir"/.config/hypr/hyprland.conf
