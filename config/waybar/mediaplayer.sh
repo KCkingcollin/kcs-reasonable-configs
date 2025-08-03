@@ -6,31 +6,22 @@ newStatus="null"
 playerctlStatus="null"
 Status="null"
 timer=0
-
-# # start script at a random time between 50 and 1000 ms to prevent race condition
-# min=5
-# max=100
-# random_value=$(( ( RANDOM % ( max - min + 1 ) ) + min ));
-# # echo - | awk -v var=$random_value '{print (var/100)}'
-# sleep $(echo - | awk -v var=$random_value '{print (var/100)}');
+strSizeLim=12
 
 while true
 do
-    # set the status var
     playerctlStatus=$(playerctl -s status);
-    # send playing song if something is playing
     if [ "$playerctlStatus" != "" ]; 
     then 
-        # set the icon
         if [ "$playerctlStatus" != "Playing" ]; 
         then 
             icon=""; 
         else 
             icon=""; 
         fi
-        # set playing song after setting the icon
-        playing="$icon $(playerctl -s metadata artist) - $(playerctl -s metadata title)";
-        # echo whats playing if we haven't already
+        artist="$(playerctl metadata --format '{{ markup_escape(artist) }}')"
+        title="$(playerctl metadata --format '{{ markup_escape(title) }}')"
+        playing="$icon ${artist:0:strSizeLim} - ${title:0:strSizeLim}";
         if [ "$curentlyPlaying" != "$playing" ]; 
         then 
             echo "$playing"; 

@@ -15,7 +15,7 @@ timer=0
 while true
 do
     # set status var
-   playerctlStatus=$(cat /tmp/playerctlStatus)
+    playerctlStatus=$(cat /tmp/playerctlStatus)
     # enable button if there is output
     if [ "$playerctlStatus" != "" ]; 
     then 
