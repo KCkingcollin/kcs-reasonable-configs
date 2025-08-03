@@ -160,7 +160,7 @@
 },
 "custom/media": {
     "format": "{}",
-    "max-length": 30,
+    "max-length": 60,
     "tooltip": false,
     "exec": "$HOME/.config/waybar/mediaplayer.sh", 
     "on-click": "playerctl play-pause",

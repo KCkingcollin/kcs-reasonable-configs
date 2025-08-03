@@ -6,7 +6,6 @@ newStatus="null"
 playerctlStatus="null"
 Status="null"
 timer=0
-strSizeLim=12
 
 while true
 do
@@ -19,9 +18,7 @@ do
         else 
             icon=""; 
         fi
-        artist="$(playerctl metadata --format '{{ markup_escape(artist) }}')"
-        title="$(playerctl metadata --format '{{ markup_escape(title) }}')"
-        playing="$icon ${artist:0:strSizeLim} - ${title:0:strSizeLim}";
+        playing="$icon $(playerctl metadata --format '{{ markup_escape(artist) }} - {{ markup_escape(title) }}')"
         if [ "$curentlyPlaying" != "$playing" ]; 
         then 
             echo "$playing"; 
