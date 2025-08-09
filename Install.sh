@@ -41,8 +41,11 @@ function getAccount {
 
 function chrootSetup {
     genfstab -U / >> /etc/fstab
-    ln -sf /usr/share/zoneinfo/Region/City /etc/localtime
+    timedatectl set-ntp true
     hwclock --systohc
+    echo "LANG=en_US.UTF-8" > /etc/locale.conf
+    echo "KEYMAP=us" > /etc/vconsole.conf
+    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
     locale-gen
     echo "Set the root password" > $(tty)
     passwd
@@ -233,8 +236,6 @@ function main {
             echo "Name of the machine?"
             read -rp " > " answer
             echo "$answer" > /mnt/etc/hostname
-            echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
-            echo "KEYMAP=us" > /etc/vconsole.conf
             arch-chroot /mnt /bin/bash -c extraPackages
             arch-chroot /mnt /bin/bash -c configSetup
             return
