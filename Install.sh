@@ -134,6 +134,7 @@ function configSetup {
     mv "$homeDir"/.config/hypr/hyprland.conf "$homeDir"/.config/hypr/hyprland.conf.bac
     yes | cp -rfp ./hyprland.conf.once "$homeDir"/.config/hypr/hyprland.conf
 
+    mkdir /root/.config
     cp -rf config/* /root/.config/
     cp -rf etc/* /etc/
     mv /root/.config/nvim/lua/user /root/.config/nvim/lua/root
@@ -163,6 +164,7 @@ function configSetup {
 }
 
 function main {
+    # check to see if the user is root
     if [[ $(id -u) = 0 ]]; then
         echo "Clean install arch?"
         read -rp "[Y/n]: " answer
@@ -229,7 +231,7 @@ function main {
                 fi
             fi
 
-            pacstrap -K /mnt $(cat "$archPackages")
+            pacstrap -c /mnt $(cat "$archPackages")
             export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount
             export gitRepo userName
             userName="$(arch-chroot /mnt /bin/bash -c chrootSetup | tail -n 1)"

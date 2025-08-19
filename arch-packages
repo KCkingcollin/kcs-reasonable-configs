@@ -63,3 +63,5 @@ pacman-contrib
 parallel
 cronie
 grub-btrfs
+dnsmasq
+hyprpolkitagent

@@ -15,7 +15,7 @@
       <feature enabled='yes' name='secure-boot'/>
     </firmware>
     <loader readonly='yes' secure='yes' type='pflash' format='raw'>/usr/share/edk2/x64/OVMF_CODE.secboot.4m.fd</loader>
-    <nvram template='/usr/share/edk2/x64/OVMF_VARS.4m.fd' templateFormat='raw' format='raw'>/home/kckingcollin/.config/libvirt/qemu/nvram/archlinux_VARS.fd</nvram>
+    <nvram template='/usr/share/edk2/x64/OVMF_VARS.4m.fd' templateFormat='raw' format='raw'>/var/lib/libvirt/qemu/nvram/archlinux_VARS.fd</nvram>
   </os>
   <features>
     <acpi/>
@@ -121,10 +121,9 @@
     <controller type='scsi' index='0' model='virtio-scsi'>
       <address type='pci' domain='0x0000' bus='0x07' slot='0x00' function='0x0'/>
     </controller>
-    <interface type='user'>
-      <mac address='52:54:00:f7:16:1a'/>
-      <model type='virtio'/>
-      <address type='pci' domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
+    <interface type='network'>
+      <source network='default'/>
+      <mac address="52:54:00:cb:3a:3f"/>
     </interface>
     <serial type='pty'>
       <target type='isa-serial' port='0'>
