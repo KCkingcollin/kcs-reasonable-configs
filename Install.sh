@@ -1,42 +1,53 @@
 #!/bin/bash
 
 function cloneRepo {
-    if [ "$(git status | grep -o -m 1 "On branch")" != "On branch" ]
-    then
-        if [ "$(ls | grep -o -m 1 "kcs-reasonable-configs")" = "kcs-reasonable-configs" ];
-        then 
-            sudo -S rm -r ./kcs-reasonable-configs/
-        fi
-        git clone -b "$gitRepo" https://github.com/KCkingcollin/kcs-reasonable-configs
-        cd kcs-reasonable-configs || return
-        archPackages="$(pwd)/arch-packages"
-        aurPackages="$(pwd)/aur-packages"
+    if ! grep -q "kcs-reasonable-configs" <(pwd) <(ls); then
+        git clone https://github.com/KCkingcollin/kcs-reasonable-configs
     fi
+    if [ -d "kcs-reasonable-configs" ]; then
+        cd kcs-reasonable-configs || return
+    fi
+    repoLocation="$(pwd)"
+    archPackages="$repoLocation/arch-packages"
+    aurPackages="$repoLocation/aur-packages"
 }
 
 function createAccount {
-    read -rp "Name of the account?: " userName
+    printf "Name of the account?: "
+    read -r userName
+    printf '\n'
     useradd -m "$userName"
     passwd "$userName"
+    addUserToSudo "$userName"
+}
+
+function getAccount {
+    echo "Provid the account usernemae you want to set the environment up with"
+    printf "Username?: "
+    read -r userName
+    printf '\n'
+    addUserToSudo "$userName"
+}
+
+function addUserToSudo {
+    userName=$1
     groupadd sudo
     usermod -aG sudo "$userName"
-    if [ "$(grep -o -m 1 "# %sudo" < /etc/sudoers)" = "# %sudo" ]
-    then
-        echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
+    if grep -q "# %sudo" /etc/sudoers || ! grep -q "%sudo" /etc/sudoers; then
+        sed -i '/# %sudo/d' /etc/sudoers
+        echo "%sudo	ALL=(ALL:ALL) ALL" >> /etc/sudoers
     fi
     echo "$userName"
 }
 
-function getAccount {
-    echo "Provid the account usernemae you want to set the environment up with" > $(tty)
-    read -rp "Username?: " userName
-    groupadd sudo
-    usermod -aG sudo "$userName"
-    if [ "$(grep -o -m 1 "# %sudo" < /etc/sudoers)" = "# %sudo" ]
-    then
-        echo "%sudo	ALL=(ALL:ALL) ALL" > /etc/sudoers.d/sudo-enable 
+function createSudoUser {
+    if ! grep -q "$userName" /etc/sudoers; then
+        echo "$userName	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
     fi
-    echo "$userName"
+}
+
+function removeSudoUser {
+    sed -i "/$userName/d" /etc/sudoers
 }
 
 function chrootSetup {
@@ -47,38 +58,39 @@ function chrootSetup {
     echo "KEYMAP=us" > /etc/vconsole.conf
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
     locale-gen
-    echo "Set the root password" > $(tty)
+    echo "Set the root password"
     passwd
     systemctl enable NetworkManager
     systemctl enable gdm
     systemctl enable cronie
     pacman -Syyu --noconfirm
-    grub-install --target=x86_64-efi --efi-directory=boot/efi --bootloader-id=GRUB
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
     grub-mkconfig -o /boot/grub/grub.cfg
     createAccount
 }
 
 function extraPackages {
+    createSudoUser
+    homeDir=$(getent passwd "$userName" | cut -d: -f6)
+    cd "$homeDir" || return
+    mv "$repoLocation" "$homeDir/"
     cloneRepo
     chown -R "$userName":"$userName" .
 
-    if [ "$(pacman -Q | grep -o -m 1 yay)" != "yay" ];
-    then
-        if [ "$(ls | grep -o -m 1 "yay")" = "yay" ];
-        then 
+    if ! pacman -Q | grep -q "yay"; then
+        if [ -d "yay" ]; then 
             rm -r ./yay/
         fi
         git clone https://aur.archlinux.org/yay.git
-        chown -R "$userName":"$userName" .
         cd yay || return
+        chown -R "$userName":"$userName" .
         sudo -S -u "$userName" makepkg -si --noconfirm
         cd ..
     fi
 
-    sudo -S -u "$userName" yay -S --noconfirm --nodeps $(cat "$aurPackages")
+    sudo -S -u "$userName" yay -Sy --noconfirm $(cat "$aurPackages")
 
-    if [ "$(ls | grep -o -m 1 "castle-shell")" = "castle-shell" ];
-    then 
+    if [ -d "castle-shell" ]; then 
         rm -r ./castle-shell/
     fi
     git clone https://github.com/KCkingcollin/castle-shell
@@ -92,11 +104,14 @@ function extraPackages {
     flatpak override --filesystem="/home/$userName"/.gtkrc-2.0
     flatpak override --env=GTK_THEME=Adwaita-dark
     flatpak override --env=ICON_THEME=Adwaita-dark
+    removeSudoUser
 }
 
 function configSetup {
-    homeDir=$(awk -F: -v v="$userName" '{if ($1==v) print $6}' /etc/passwd)
+    createSudoUser
+    homeDir=$(getent passwd "$userName" | cut -d: -f6)
     cd "$homeDir" || return
+    mv "$repoLocation" "$homeDir/"
     cloneRepo
     chown -R "$userName":"$userName" .
 
@@ -127,12 +142,12 @@ function configSetup {
     mv /root/.gtkrc-2.0 /root/.gtkrc-2.0.bac 
 
     sudo -S -u "$userName" mkdir "$homeDir"/.config
-    yes | cp -rfp config/* "$homeDir"/.config/
+    cp -rfp config/* "$homeDir"/.config/
     mv "$homeDir"/.config/nvim/lua/user "$homeDir"/.config/nvim/lua/"$userName"
-    yes | cp -rfp ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$homeDir"/
-    yes | cp -rfp ./after.sh "$homeDir"/.config/hypr/
+    cp -rfp ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$homeDir"/
+    cp -rfp ./after.sh "$homeDir"/.config/hypr/
     mv "$homeDir"/.config/hypr/hyprland.conf "$homeDir"/.config/hypr/hyprland.conf.bac
-    yes | cp -rfp ./hyprland.conf.once "$homeDir"/.config/hypr/hyprland.conf
+    cp -rfp ./hyprland.conf.once "$homeDir"/.config/hypr/hyprland.conf
 
     mkdir /root/.config
     cp -rf config/* /root/.config/
@@ -145,11 +160,14 @@ function configSetup {
     chsh -s /bin/zsh "$userName"
     chsh -s /bin/zsh root
 
-    if [ "$(ls "$homeDir/Pictures/" | grep -o -m 1 "background.jpg")" != "background.jpg" ];
+    if [ ! -d "$homeDir/Pictures/background.jpg" ];
     then
         sudo -S -u "$userName" mkdir -p "$homeDir"/Pictures
-        yes | cp -fp ./background.jpg "$homeDir"/Pictures/background.jpg
+        cp -fp ./background.jpg "$homeDir"/Pictures/background.jpg
     fi
+
+    sudo -S -u "$userName" gsettings set org.gnome.desktop.interface gtk-theme "Adwaita-dark"
+    sudo -S -u "$userName" gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
 
     rate-mirrors --allow-root --save /etc/pacman.d/mirrorlist arch
 
@@ -161,30 +179,41 @@ function configSetup {
     XSession=hyprland
     Icon="$userName"/.face
     SystemAccount=false' > /var/lib/AccountsService/users/"$userName"
+    removeSudoUser
 }
 
 function main {
     # check to see if the user is root
     if [[ $(id -u) = 0 ]]; then
         echo "Clean install arch?"
-        read -rp "[Y/n]: " answer
-        if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
+        read -rp "[Y/n]: " cleanInstall
+        if [[ "$cleanInstall" =~ ^[yY]([eE][sS])?$ ]]; then
             cloneRepo
             echo "Replace repos with arch repos?"
-            read -rp "[Y/n]: " answer
-            if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
+            read -rp "[Y/n]: " replaceRepos
+            if [[ "$replaceRepos" =~ ^[yY]([eE][sS])?$ ]]; then
                 cp -rf etc/* /etc/
+            elif [[ -z "$replaceRepos" ]]; then
+                echo "no input"
+                return
             fi
             cd /
             pacman -Syy --noconfirm archlinux-keyring arch-install-scripts
             lsblk
 
             echo "Auto mount partitions?"
-            read -rp "[Y/n]: " answer
-            if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
+            read -rp "[Y/n]: " autoMount
+            if [[ "$autoMount" =~ ^[yY]([eE][sS])?$ ]]; then
+                echo "Boot partition?"
+                read -rp " > " partBoot
                 echo "Root partition (needs to be btrfs)?"
                 read -rp " > " partRoot
-                if [ "$partRoot" == "" ]; then
+                echo "Home partition (leave blank to use the same partition)?"
+                read -rp " > " partHome
+                echo "Swap partition?"
+                read -rp " > " partSwap
+
+                if [[ -z "$partRoot" ]]; then
                     echo "No root provided, stopping installation"
                     return
                 else
@@ -193,9 +222,7 @@ function main {
                     btrfs subvolume create @
                 fi
 
-                echo "Home partition (leave blank to use the same partition)?"
-                read -rp " > " partHome
-                if [ "$partHome" == "" ]; then
+                if [[ -z "$partHome" ]]; then
                     btrfs subvolume create @home
                     cd /
                     umount /mnt
@@ -210,48 +237,57 @@ function main {
                     mount "$partHome" /mnt/home
                 fi
 
-                echo "Boot partition?"
-                read -rp " > " partBoot
                 mkdir -p /mnt/boot/efi
-                if [ "$partBoot" == "" ]; then
+                if [[ -z "$partBoot" ]]; then
                     echo "Bios boot is not supported, need a fat32 efi partition"
                     return
                 else
                     mount "$partBoot" /mnt/boot/efi
                 fi
 
-                echo "Swap partition?"
-                read -rp " > " partSwap
-                if [ "$partSwap" == "" ]; then
+                if [[ -z "$partSwap" ]]; then
                     echo "Swap file not yet supported, continuing without swap"
                     swapoff -a
                 else
                     swapoff -a
                     swapon "$partSwap"
                 fi
+            elif [[ -z "$autoMount" ]]; then
+                echo "no input"
+                return
             fi
 
             pacstrap -c /mnt $(cat "$archPackages")
-            export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount
-            export gitRepo userName
-            userName="$(arch-chroot /mnt /bin/bash -c chrootSetup | tail -n 1)"
-            echo "Name of the machine?"
-            read -rp " > " answer
-            echo "$answer" > /mnt/etc/hostname
+            mkdir /mnt/kcs-reasonable-configs
+            cp -r "$repoLocation"/* "$repoLocation"/.* /mnt/kcs-reasonable-configs/
+            repoLocation="/kcs-reasonable-configs"
+            export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount addUserToSudo createSudoUser removeSudoUser
+            export userName repoLocation
+            userName="$(arch-chroot /mnt /bin/bash -c chrootSetup | tee /dev/tty | tail -n 1)"
+            read -rp "Name of the machine?: " hostName
+            if [[ -z "$hostName" ]]; then
+                echo "no input"
+                return
+            fi
+            echo "$hostName" > /mnt/etc/hostname
             arch-chroot /mnt /bin/bash -c extraPackages
             arch-chroot /mnt /bin/bash -c configSetup
+            return
+        elif [[ -z "$cleanInstall" ]]; then
+            echo "no input"
             return
         fi
         cloneRepo
         echo "Replace repos with arch repos?"
-        read -rp "[Y/n]: " answer
-        if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]; then
+        read -rp "[Y/n]: " replaceRepos
+        if [[ "$replaceRepos" =~ ^[yY]([eE][sS])?$ ]]; then
             cp -rf etc/* /etc/
-            pacman -Syy --noconfirm archlinux-keyring
-            pacman -Syyu --noconfirm --nodeps $(cat "$archPackages")
-        else
-            pacman -Syyu --noconfirm $(cat "$archPackages")
+        elif [[ -z "$replaceRepos" ]]; then
+            echo "no input"
+            return
         fi
+        pacman -Syy --noconfirm archlinux-keyring
+        pacman -Syyu --noconfirm --nodeps $(cat "$archPackages")
         if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
             userName="$(chrootSetup | tail -n 1)"
             extraPackages
@@ -259,12 +295,15 @@ function main {
             return
         else
             echo "Create a new account?"
-            read -rp "[Y/n]: " answer
-            if [ "$(echo "$answer" | grep -o -m 1 "y")" = "y" ]
-            then
+            read -rp "[Y/n]: " createAccount
+            if [[ "$createAccount" =~ ^[yY]([eE][sS])?$ ]]; then
                 userName="$(createAccount | tail -n 1)"
             else
                 userName="$(getAccount | tail -n 1)"
+            fi
+            if [[ -z "$userName" ]]; then
+                echo "no input"
+                return
             fi
             extraPackages
             configSetup
@@ -280,11 +319,5 @@ function main {
 
 # if true use the script as a set of functions basically
 if [ "$1" != true ]; then 
-    if [ "$1" != "" ]; then
-        gitRepo="$1"
-    else
-        echo "need to specify a branch"
-        return
-    fi
     main 
 fi
