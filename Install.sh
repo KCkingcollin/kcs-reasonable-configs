@@ -33,21 +33,16 @@ function addUserToSudo {
     userName=$1
     groupadd sudo
     usermod -aG sudo "$userName"
-    if grep -q "# %sudo" /etc/sudoers || ! grep -q "%sudo" /etc/sudoers; then
-        sed -i '/# %sudo/d' /etc/sudoers
-        echo "%sudo	ALL=(ALL:ALL) ALL" >> /etc/sudoers
-    fi
+    sed -i 's/^#%sudo/%sudo/' /etc/sudoers
     echo "$userName"
 }
 
 function createSudoUser {
-    if ! grep -q "$userName" /etc/sudoers; then
-        echo "$userName	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
-    fi
+    echo "$userName ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/temp_rule
 }
 
 function removeSudoUser {
-    sed -i "/$userName/d" /etc/sudoers
+    rm /etc/sudoers.d/temp_rule
 }
 
 function chrootSetup {

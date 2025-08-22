@@ -1,0 +1,21 @@
+FROM archlinux:latest
+
+COPY etc/pacman.conf /etc/pacman.conf
+WORKDIR /kcs-reasonable-configs
+COPY . .
+RUN pacman -Scc --noconfirm && \
+    useradd -m arch && \
+    printf "arch\narch\n" | passwd arch && \
+    echo "arch	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+    pacman-key --init && \
+    pacman-key --populate archlinux && \
+    pacman -Sy --noconfirm archlinux-keyring && \
+    pacman -Suw --needed --noconfirm $(cat "./arch-packages") && \
+    pacman -S --noconfirm git base-devel btrfs-progs && \
+    chown -R arch:arch .;
+USER arch
+RUN git clone https://aur.archlinux.org/yay-bin.git && \
+    cd yay-bin && \
+    makepkg -si --noconfirm && \
+    cd .. && \
+    yay -Syw --needed --noconfirm $(cat "./aur-packages");

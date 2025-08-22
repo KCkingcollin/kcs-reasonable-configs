@@ -1,0 +1,9 @@
+FROM kcs-reasonable-configs-install-ev
+
+WORKDIR /kcs-reasonable-configs
+COPY . .
+USER root
+RUN echo 'echo -e "$testInput" | bash -c ./Install.sh' > /root/.bashrc
+
+ARG testInput
+ENV testInput="$testInput"
