@@ -1,8 +1,11 @@
 FROM archlinux:latest
 
-COPY etc/pacman.conf /etc/pacman.conf
+COPY etc/pacman.conf /etc/
+
 WORKDIR /kcs-reasonable-configs
+
 COPY . .
+
 RUN pacman -Scc --noconfirm && \
     useradd -m arch && \
     printf "arch\narch\n" | passwd arch && \
@@ -10,12 +13,22 @@ RUN pacman -Scc --noconfirm && \
     pacman-key --init && \
     pacman-key --populate archlinux && \
     pacman -Sy --noconfirm archlinux-keyring && \
-    pacman -Suw --needed --noconfirm $(cat "./arch-packages") && \
-    pacman -S --noconfirm git base-devel btrfs-progs && \
+    pacman -Suw --noconfirm $(cat "./arch-packages") && \
+    pacman -S --noconfirm \ 
+    git base-devel btrfs-progs zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch && \
     chown -R arch:arch .;
+
+COPY .zshrc /root/
+COPY .zshrc /home/arch/
+
 USER arch
+
 RUN git clone https://aur.archlinux.org/yay-bin.git && \
     cd yay-bin && \
     makepkg -si --noconfirm && \
     cd .. && \
-    yay -Syw --needed --noconfirm $(cat "./aur-packages");
+    yay -Sy --noconfirm $(cat "./aur-packages") || true && \
+    yay -R --noconfirm $(cat "./aur-packages" | sed "/yay-bin/d") && \
+    yay -S --needed --noconfirm yay-bin oh-my-zsh-git;
+
+USER root

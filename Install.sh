@@ -45,8 +45,19 @@ function removeSudoUser {
     rm /etc/sudoers.d/temp_rule
 }
 
+function checkAndFixFstab {
+    if [ "$#" -lt 1 ]; then
+        echo "No devices given."
+        return 1
+    fi
+    for elm in range "$@"; do
+        sed -i "/^#/! s|$elm|UUID=$(blkid | grep "$elm" | cut -d'"' -f2)|" /etc/fstab
+    done
+}
+
 function chrootSetup {
     genfstab -U / >> /etc/fstab
+    checkAndFixFstab "$@" || return 1
     timedatectl set-ntp true
     hwclock --systohc
     echo "LANG=en_US.UTF-8" > /etc/locale.conf
@@ -59,7 +70,8 @@ function chrootSetup {
     systemctl enable gdm
     systemctl enable cronie
     pacman -Syyu --noconfirm
-    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARCH
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable --recheck
     grub-mkconfig -o /boot/grub/grub.cfg
     createAccount
 }
@@ -68,16 +80,15 @@ function extraPackages {
     createSudoUser
     homeDir=$(getent passwd "$userName" | cut -d: -f6)
     cd "$homeDir" || return
-    mv "$repoLocation" "$homeDir/"
+    mv "$repoLocation" "$homeDir/kcs-reasonable-configs" &> /dev/null
     cloneRepo
-    chown -R "$userName":"$userName" .
+    chown -R "$userName":"$userName" "$homeDir"
 
     if ! pacman -Q | grep -q "yay"; then
-        if [ -d "yay" ]; then 
-            rm -r ./yay/
+        if [ ! -d "yay-bin" ]; then 
+            git clone https://aur.archlinux.org/yay-bin.git
         fi
-        git clone https://aur.archlinux.org/yay.git
-        cd yay || return
+        cd yay-bin || return
         chown -R "$userName":"$userName" .
         sudo -S -u "$userName" makepkg -si --noconfirm
         cd ..
@@ -106,37 +117,37 @@ function configSetup {
     createSudoUser
     homeDir=$(getent passwd "$userName" | cut -d: -f6)
     cd "$homeDir" || return
-    mv "$repoLocation" "$homeDir/"
+    mv "$repoLocation" "$homeDir/kcs-reasonable-configs" &> /dev/null
     cloneRepo
     chown -R "$userName":"$userName" .
 
-    mv "$homeDir"/.config/nvim "$homeDir"/.config/nvim.bac 
-    mv "$homeDir"/.config/fastfetch "$homeDir"/.config/fastfetch.bac 
-    mv "$homeDir"/.config/kitty "$homeDir"/.config/foot.bac 
-    mv "$homeDir"/.config/hypr "$homeDir"/.config/hypr.bac 
-    mv "$homeDir"/.config/waybar "$homeDir"/.config/waybar.bac 
-    mv "$homeDir"/.config/swaync "$homeDir"/.config/swaync.bac 
-    mv "$homeDir"/.config/rofi "$homeDir"/.config/rofi.bac 
-    mv "$homeDir"/.config/castle-shell "$homeDir"/.config/castle-shell.bac 
-    mv "$homeDir"/.zshrc "$homeDir"/.zshrc.bac 
-    mv "$homeDir"/.themes "$homeDir"/.themes.bac 
-    mv "$homeDir"/.icons "$homeDir"/.icons.bac 
-    mv "$homeDir"/.gtkrc-2.0 "$homeDir"/.gtkrc-2.0.bac 
+    mv "$homeDir"/.config/nvim "$homeDir"/.config/nvim.bac &> /dev/null
+    mv "$homeDir"/.config/fastfetch "$homeDir"/.config/fastfetch.bac &> /dev/null
+    mv "$homeDir"/.config/kitty "$homeDir"/.config/foot.bac &> /dev/null
+    mv "$homeDir"/.config/hypr "$homeDir"/.config/hypr.bac &> /dev/null
+    mv "$homeDir"/.config/waybar "$homeDir"/.config/waybar.bac &> /dev/null
+    mv "$homeDir"/.config/swaync "$homeDir"/.config/swaync.bac &> /dev/null
+    mv "$homeDir"/.config/rofi "$homeDir"/.config/rofi.bac &> /dev/null
+    mv "$homeDir"/.config/castle-shell "$homeDir"/.config/castle-shell.bac &> /dev/null
+    mv "$homeDir"/.zshrc "$homeDir"/.zshrc.bac &> /dev/null
+    mv "$homeDir"/.themes "$homeDir"/.themes.bac &> /dev/null
+    mv "$homeDir"/.icons "$homeDir"/.icons.bac &> /dev/null
+    mv "$homeDir"/.gtkrc-2.0 "$homeDir"/.gtkrc-2.0.bac &> /dev/null
 
-    mv /root/.config/nvim /root/.config/nvim.bac 
-    mv /root/.config/fastfetch /root/.config/fastfetch.bac 
-    mv /root/.config/kitty /root/.config/foot.bac 
-    mv /root/.config/hypr /root/.config/hypr.bac 
-    mv /root/.config/waybar /root/.config/waybar.bac 
-    mv /root/.config/swaync /root/.config/swaync.bac 
-    mv /root/.config/rofi /root/.config/rofi.bac 
-    mv /root/.config/castle-shell /root/.config/castle-shell.bac 
-    mv /root/.zshrc /root/.zshrc.bac 
-    mv /root/.themes /root/.themes.bac 
-    mv /root/.icons /root/.icons.bac 
-    mv /root/.gtkrc-2.0 /root/.gtkrc-2.0.bac 
+    mv /root/.config/nvim /root/.config/nvim.bac &> /dev/null
+    mv /root/.config/fastfetch /root/.config/fastfetch.bac &> /dev/null
+    mv /root/.config/kitty /root/.config/foot.bac &> /dev/null
+    mv /root/.config/hypr /root/.config/hypr.bac &> /dev/null
+    mv /root/.config/waybar /root/.config/waybar.bac &> /dev/null
+    mv /root/.config/swaync /root/.config/swaync.bac &> /dev/null
+    mv /root/.config/rofi /root/.config/rofi.bac &> /dev/null
+    mv /root/.config/castle-shell /root/.config/castle-shell.bac &> /dev/null
+    mv /root/.zshrc /root/.zshrc.bac &> /dev/null
+    mv /root/.themes /root/.themes.bac &> /dev/null
+    mv /root/.icons /root/.icons.bac &> /dev/null
+    mv /root/.gtkrc-2.0 /root/.gtkrc-2.0.bac &> /dev/null
 
-    sudo -S -u "$userName" mkdir "$homeDir"/.config
+    sudo -S -u "$userName" mkdir "$homeDir"/.config &> /dev/null
     cp -rfp config/* "$homeDir"/.config/
     mv "$homeDir"/.config/nvim/lua/user "$homeDir"/.config/nvim/lua/"$userName"
     cp -rfp ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$homeDir"/
@@ -144,7 +155,7 @@ function configSetup {
     mv "$homeDir"/.config/hypr/hyprland.conf "$homeDir"/.config/hypr/hyprland.conf.bac
     cp -rfp ./hyprland.conf.once "$homeDir"/.config/hypr/hyprland.conf
 
-    mkdir /root/.config
+    mkdir /root/.config &> /dev/null
     cp -rf config/* /root/.config/
     cp -rf etc/* /etc/
     mv /root/.config/nvim/lua/user /root/.config/nvim/lua/root
@@ -152,22 +163,28 @@ function configSetup {
     cp -rf ./switch-DEs.sh /usr/bin/switch-DEs
     cp -rf ./theme-check.service ./waybar-hyprland.service /usr/lib/systemd/user/
     cp -rf ./switch-DEs.service  /etc/systemd/system/
+    mkdir -p /root/.local/share/nvim
+    mkdir -p /root/.local/state/nvim
+    chown -R root:root /root/
+
     chsh -s /bin/zsh "$userName"
     chsh -s /bin/zsh root
 
     if [ ! -d "$homeDir/Pictures/background.jpg" ];
     then
-        sudo -S -u "$userName" mkdir -p "$homeDir"/Pictures
+        sudo -S -u "$userName" mkdir -p "$homeDir"/Pictures &> /dev/null
         cp -fp ./background.jpg "$homeDir"/Pictures/background.jpg
     fi
 
     sudo -S -u "$userName" gsettings set org.gnome.desktop.interface gtk-theme "Adwaita-dark"
     sudo -S -u "$userName" gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
+    gsettings set org.gnome.desktop.interface gtk-theme "Adwaita-dark"
+    gsettings set org.gnome.desktop.interface color-scheme "prefer-dark"
 
     rate-mirrors --allow-root --save /etc/pacman.d/mirrorlist arch
 
-    sudo -S -u "$userName" nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
-    nvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
+    sudo -S -u "$userName" nvim --headless -c 'lua vim.cmd("PackerSync")' -c 'autocmd User PackerComplete quitall'
+    nvim --headless -c 'lua vim.cmd("PackerSync")' -c 'autocmd User PackerComplete quitall'
 
     bash -c echo '[User]                        
     Session=hyprland
@@ -212,24 +229,24 @@ function main {
                     echo "No root provided, stopping installation"
                     return
                 else
-                    mount "$partRoot" /mnt
-                    cd /mnt || return
-                    btrfs subvolume create @
+                    mount "$partRoot" /mnt || exit
+                    cd /mnt || exit
+                    btrfs subvolume create @ || exit
                 fi
 
                 if [[ -z "$partHome" ]]; then
                     btrfs subvolume create @home
                     cd /
                     umount /mnt
-                    mount -t btrfs -o subvol=@ "$partRoot" /mnt
-                    mkdir /mnt/home
-                    mount -t btrfs -o subvol=@home "$partRoot" /mnt/home
+                    mount -t btrfs -o subvol=@ "$partRoot" /mnt || exit
+                    mkdir /mnt/home 
+                    mount -t btrfs -o subvol=@home "$partRoot" /mnt/home || exit
                 else
                     cd /
                     umount /mnt
-                    mount -t btrfs -o subvol=@ "$partRoot" /mnt
+                    mount -t btrfs -o subvol=@ "$partRoot" /mnt || exit
                     mkdir /mnt/home
-                    mount "$partHome" /mnt/home
+                    mount "$partHome" /mnt/home || exit
                 fi
 
                 mkdir -p /mnt/boot/efi
@@ -237,7 +254,7 @@ function main {
                     echo "Bios boot is not supported, need a fat32 efi partition"
                     return
                 else
-                    mount "$partBoot" /mnt/boot/efi
+                    mount "$partBoot" /mnt/boot/efi || exit
                 fi
 
                 if [[ -z "$partSwap" ]]; then
@@ -252,21 +269,31 @@ function main {
                 return
             fi
 
-            pacstrap -c /mnt $(cat "$archPackages")
+            pacstrap -c /mnt $(cat "$archPackages") || exit
             mkdir /mnt/kcs-reasonable-configs
             cp -r "$repoLocation"/* "$repoLocation"/.* /mnt/kcs-reasonable-configs/
             repoLocation="/kcs-reasonable-configs"
-            export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount addUserToSudo createSudoUser removeSudoUser
-            export userName repoLocation
-            userName="$(arch-chroot /mnt /bin/bash -c chrootSetup | tee /dev/tty | tail -n 1)"
+            export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount addUserToSudo createSudoUser removeSudoUser checkAndFixFstab || exit
+            export userName repoLocation || exit
+            output=$(arch-chroot /mnt bash -c 'chrootSetup "$@"' _ "$partRoot" "$partBoot" "$partSwap" "$partHome")
+            if [ $? -ne 0 ]; then
+                echo "Error: chrootSetup failed."
+                exit 1
+            fi
+            userName=$(echo "$output" | tail -n 1)
             read -rp "Name of the machine?: " hostName
             if [[ -z "$hostName" ]]; then
                 echo "no input"
                 return
             fi
             echo "$hostName" > /mnt/etc/hostname
+            mkdir -p /mnt/home/"$userName"/.cache/yay
+            cp -r /home/*/.cache/yay/* /mnt/home/"$userName"/.cache/yay/
             arch-chroot /mnt /bin/bash -c extraPackages
             arch-chroot /mnt /bin/bash -c configSetup
+
+            swapoff -a
+            umount -l /mnt
             return
         elif [[ -z "$cleanInstall" ]]; then
             echo "no input"
@@ -284,7 +311,12 @@ function main {
         pacman -Syy --noconfirm archlinux-keyring
         pacman -Syyu --noconfirm --nodeps $(cat "$archPackages")
         if [ "$(stat -c %d:%i /)" != "$(stat -c %d:%i /proc/1/root/.)" ]; then
-            userName="$(chrootSetup | tail -n 1)"
+            partRoot="$(df --output=source,target | grep "/" | head -n 1 | awk '{print $1}')"
+            partBoot="$(df --output=source,target | grep "/boot" | head -n 1 | awk '{print $1}')"
+            partHome="$(df --output=source,target | grep "/home" | head -n 1 | awk '{print $1}')"
+
+            userName="$(chrootSetup "$partRoot" "$partBoot" "$partHome" | tail -n 1)"
+
             extraPackages
             configSetup
             return
@@ -300,6 +332,9 @@ function main {
                 echo "no input"
                 return
             fi
+            homeDir=$(getent passwd "$userName" | cut -d: -f6)
+            mkdir -p /home/"$homeDir"/.cache/yay
+            cp -r /home/*/.cache/yay/* /home/"$homeDir"/.cache/yay/
             extraPackages
             configSetup
             sudo -S -u "$userName" systemctl --user import-environment

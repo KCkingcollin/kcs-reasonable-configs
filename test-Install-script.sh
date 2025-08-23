@@ -21,10 +21,10 @@ function waitForBlockDev {
 # arg 4: The location of the mount
 function mountVirtDisk {
     modprobe nbd max_part=8
-    qemu-nbd -c /dev/nbd"$1" "$2"
+    qemu-nbd -c /dev/nbd"$1" "$2" || exit
     waitForBlockDev nbd"$1"
     if [ "$#" -gt 2 ]; then
-        mount /dev/nbd"$1"p"$3" "$4" | exit
+        mount /dev/nbd"$1"p"$3" "$4" || exit
     fi
 }
 
@@ -35,8 +35,10 @@ function umountVirtDisk {
 }
 
 function createTestEV {
-    sudo virsh destroy $vmName
-    sudo virsh net-destroy default
+    qemu-nbd -d /dev/nbd0
+    sudo virsh destroy $vmName &> /dev/null
+    sudo virsh net-destroy default &> /dev/null
+    rm "$archTestDisk" &> /dev/null
 
     qemu-img create -f qcow2 "$archTestDisk" 50G
 
@@ -48,21 +50,25 @@ function createTestEV {
         set 1 esp on \
         mkpart "rootfs" btrfs 1GiB 21GiB \
         mkpart "home" ext4 21GiB 45GiB \
-        mkpart "swap" linux-swap 45GiB 100%
+        mkpart "swap" linux-swap 45GiB 100% ||
+        exit
 
-    mkfs.fat -F32 /dev/nbd0p1
-    mkfs.btrfs /dev/nbd0p2
-    mkfs.ext4 /dev/nbd0p3
-    mkswap /dev/nbd0p4
+    mkfs.fat -F32 /dev/nbd0p1 || exit
+    mkfs.btrfs /dev/nbd0p2 || exit
+    mkfs.ext4 /dev/nbd0p3 || exit
+    mkswap /dev/nbd0p4 || exit
 
     umountVirtDisk 0
     
     if ! podman image exists kcs-reasonable-configs-install-ev; then
-        echo "Did not find main install environment image, creating it now"
-        podman build --dns 8.8.8.8 -t kcs-reasonable-configs-install-ev .
+        podman load -i ./install-ev-main.tar
     fi
+    if podman image exists test-install-ev; then
+        podman rmi -f test-install-ev
+    fi
+    podman build --dns 8.8.8.8 -f Dockerfile.run-test -t test-install-ev .
 
-    if ! virsh define ./$vmName.xml >/dev/null 2>&1; then
+    if ! virsh define ./$vmName.xml &> /dev/null ; then
         virsh undefine $vmName --nvram
         virsh define ./$vmName.xml
     fi
@@ -142,9 +148,9 @@ function systemTest {
 
     echo "running system test 1"
     mountVirtDisk 0 "$archTestDisk"
-    podman build --build-arg testInput="$(createInput)" -f Dockerfile.test -t test-install-ev .
-    podman run -it --rm --privileged test-install-ev /bin/bash
-    podman rmi -f test-install-ev
+    podman run -e testInput="$(createInput)" -it --rm --privileged \
+    --device /dev/nbd0:/dev/nbd0 \
+    test-install-ev
     umountVirtDisk 0
 
     virsh attach-disk $vmName "$archTestDisk" vdb --persistent --subdriver qcow2
@@ -154,6 +160,7 @@ function systemTest {
 
 if [[ $(id -u) = 0 ]]; then
     systemTest
+    exit
 else 
     echo "needs to be run as root"
 fi

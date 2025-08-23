@@ -1,9 +1,8 @@
 FROM kcs-reasonable-configs-install-ev
 
-WORKDIR /kcs-reasonable-configs
 COPY . .
-USER root
-RUN echo 'echo -e "$testInput" | bash -c ./Install.sh' > /root/.bashrc
 
-ARG testInput
-ENV testInput="$testInput"
+COPY .zshrc /root/
+COPY .zshrc /home/arch/
+
+CMD echo -e "$testInput" | source ./Install.sh && umount -l /mnt && exit;
