@@ -133,27 +133,27 @@ function createInput {
 }
 
 function systemTest {
-    createTestEV
-
-    cleanInstall="y"
-    replaceRepos="y"
-    autoMount="y"
-    bootDev="/dev/nbd0p1"
-    rootDev="/dev/nbd0p2"
-    homeDev="/dev/nbd0p3"
-    swapDev="/dev/nbd0p4"
-    rootPW="testPass"
-    userName="testuser"
-    userPass="testPass"
-    machineName="testev"
-
     runTest1() {
+        createTestEV
+
+        cleanInstall="y"
+        replaceRepos="y"
+        autoMount="y"
+        bootDev="/dev/nbd0p1"
+        rootDev="/dev/nbd0p2"
+        homeDev="/dev/nbd0p3"
+        swapDev="/dev/nbd0p4"
+        rootPW="testPass"
+        userName="testuser"
+        userPass="testPass"
+        machineName="testev"
         echo "running system test 1"
         mountVirtDisk 0 "$archTestDisk"
         podman run -e testInput="$(createInput)" -it --rm --privileged \
             --device /dev/nbd0:/dev/nbd0 \
-            test-install-ev &&\
-        umountVirtDisk 0 || return 1
+            test-install-ev || err=true && err=false
+        umountVirtDisk 0
+        if $err; then return 1; else return 0; fi
     }
     test1="Full instalation test\nInput:\n$(createInput)"
     if ! runTest1; then

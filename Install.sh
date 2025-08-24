@@ -195,11 +195,11 @@ function configSetup {
 
     rate-mirrors --allow-root --save /etc/pacman.d/mirrorlist arch
 
-    sudo -S -u "$userName" nvim --noplugin --headless -c 'qa' 2> /dev/null
-    nvim --noplugin --headless -c 'qa' 2> /dev/null
+    sudo -S -u "$userName" nvim --noplugin --headless -c 'autocmd User PackerComplete quitall' 2> /dev/null
+    nvim --noplugin --headless -c 'autocmd User PackerComplete quitall' 2> /dev/null
 
-    sudo -S -u "$userName" nvim --headless -c 'qa' || return 1
-    nvim --headless -c 'qa' || return 1
+    sudo -S -u "$userName" nvim --headless -E +'TSUpdateSync' +'quitall' || return 1
+    nvim --headless -E +'TSUpdateSync' +'quitall' || return 1
 
     bash -c echo '[User]                        
     Session=hyprland
@@ -314,9 +314,8 @@ function main {
             arch-chroot /mnt /bin/bash -c extraPackages || handError
             arch-chroot /mnt /bin/bash -c configSetup || handError
 
-            swapoff -a
-            umount -lf /mnt || return 1
-            return 0
+            swapoff -a &> /dev/null
+            umount -lf /mnt || return 1 && return 0
         elif [[ -z "$cleanInstall" ]]; then
             echo "no input"
             return 1
@@ -342,9 +341,8 @@ function main {
                 return 1
             fi
 
-            extraPackages || removeSudoUser && return 1
-            configSetup || removeSudoUser && return 1
-            return 0
+            extraPackages || removeSudoUser; return 1
+            configSetup || removeSudoUser; return 1 && return 0
         else
             echo "Create a new account?"
             read -rp "[Y/n]: " createAccount
@@ -382,8 +380,9 @@ function main {
 
 # if true use the script as a library basically
 if [ "$1" != true ]; then 
-    main ||
-        swapoff -a &&\
-        umount -lf /mnt &&\
+    main || (
+        swapoff -a
+        umount -lf /mnt
         exit 1
+        ) && exit 0
 fi
