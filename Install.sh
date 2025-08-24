@@ -5,11 +5,12 @@ function cloneRepo {
         git clone https://github.com/KCkingcollin/kcs-reasonable-configs
     fi
     if [ -d "kcs-reasonable-configs" ]; then
-        cd kcs-reasonable-configs || return
+        cd kcs-reasonable-configs || return 1
     fi
     repoLocation="$(pwd)"
     archPackages="$repoLocation/arch-packages"
     aurPackages="$repoLocation/aur-packages"
+    return 0
 }
 
 function createAccount {
@@ -17,8 +18,9 @@ function createAccount {
     read -r userName
     printf '\n'
     useradd -m "$userName"
-    passwd "$userName"
+    passwd "$userName" || return 1
     addUserToSudo "$userName"
+    return 0
 }
 
 function getAccount {
@@ -27,22 +29,27 @@ function getAccount {
     read -r userName
     printf '\n'
     addUserToSudo "$userName"
+    return 0
 }
 
 function addUserToSudo {
-    userName=$1
-    groupadd sudo
+    userName="$1"
+    groupadd sudo 
     usermod -aG sudo "$userName"
-    sed -i 's/^#%sudo/%sudo/' /etc/sudoers
+    sed -i '/%sudo/ s/^#//' /etc/sudoers
     echo "$userName"
 }
 
 function createSudoUser {
-    echo "$userName ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/temp_rule
+    echo "$userName ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/tempRule
 }
 
 function removeSudoUser {
-    rm /etc/sudoers.d/temp_rule
+    if rm /etc/sudoers.d/tempRule 2>&1 | grep -q "No such file or directory"; then
+        echo "Error removing sudo user, system is not secure"
+        return 1
+    fi
+    return 0
 }
 
 function checkAndFixFstab {
@@ -53,6 +60,7 @@ function checkAndFixFstab {
     for elm in range "$@"; do
         sed -i "/^#/! s|$elm|UUID=$(blkid | grep "$elm" | cut -d'"' -f2)|" /etc/fstab
     done
+    return 0
 }
 
 function chrootSetup {
@@ -69,17 +77,19 @@ function chrootSetup {
     systemctl enable NetworkManager
     systemctl enable gdm
     systemctl enable cronie
-    pacman -Syyu --noconfirm
-    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARCH
-    grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable --recheck
-    grub-mkconfig -o /boot/grub/grub.cfg
+    pacman -Syu --noconfirm
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ARCH || return 1
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable --recheck || return 1
+    grub-mkconfig -o /boot/grub/grub.cfg || return 1
     createAccount
+    return 0
 }
 
 function extraPackages {
+    echo "Installing extra packages"
     createSudoUser
     homeDir=$(getent passwd "$userName" | cut -d: -f6)
-    cd "$homeDir" || return
+    cd "$homeDir" || return 1
     mv "$repoLocation" "$homeDir/kcs-reasonable-configs" &> /dev/null
     cloneRepo
     chown -R "$userName":"$userName" "$homeDir"
@@ -88,7 +98,7 @@ function extraPackages {
         if [ ! -d "yay-bin" ]; then 
             git clone https://aur.archlinux.org/yay-bin.git
         fi
-        cd yay-bin || return
+        cd yay-bin || return 1
         chown -R "$userName":"$userName" .
         sudo -S -u "$userName" makepkg -si --noconfirm
         cd ..
@@ -96,27 +106,29 @@ function extraPackages {
 
     sudo -S -u "$userName" yay -Sy --noconfirm $(cat "$aurPackages")
 
-    if [ -d "castle-shell" ]; then 
-        rm -r ./castle-shell/
+    if [ ! -d "castle-shell" ]; then 
+        git clone https://github.com/KCkingcollin/castle-shell || return 1
     fi
-    git clone https://github.com/KCkingcollin/castle-shell
-    cd castle-shell/color-checker || return
+    cd castle-shell/color-checker || return 1
     go build -o /usr/bin/color-checker
     cd ../..
 
-    flatpak remote-add --system flathub https://flathub.org/repo/flathub.flatpakrepo
     flatpak override --filesystem="/home/$userName"/.themes
     flatpak override --filesystem="/home/$userName"/.icons
     flatpak override --filesystem="/home/$userName"/.gtkrc-2.0
     flatpak override --env=GTK_THEME=Adwaita-dark
     flatpak override --env=ICON_THEME=Adwaita-dark
-    removeSudoUser
+
+    removeSudoUser || return 1
+    echo "Extra packages installed"
+    return 0
 }
 
 function configSetup {
+    echo "Installing configs"
     createSudoUser
     homeDir=$(getent passwd "$userName" | cut -d: -f6)
-    cd "$homeDir" || return
+    cd "$homeDir" || return 1
     mv "$repoLocation" "$homeDir/kcs-reasonable-configs" &> /dev/null
     cloneRepo
     chown -R "$userName":"$userName" .
@@ -183,20 +195,26 @@ function configSetup {
 
     rate-mirrors --allow-root --save /etc/pacman.d/mirrorlist arch
 
-    sudo -S -u "$userName" nvim --headless -c 'lua vim.cmd("PackerSync")' -c 'autocmd User PackerComplete quitall'
-    nvim --headless -c 'lua vim.cmd("PackerSync")' -c 'autocmd User PackerComplete quitall'
+    sudo -S -u "$userName" nvim --noplugin --headless -c 'qa' 2> /dev/null
+    nvim --noplugin --headless -c 'qa' 2> /dev/null
+
+    sudo -S -u "$userName" nvim --headless -c 'qa' || return 1
+    nvim --headless -c 'qa' || return 1
 
     bash -c echo '[User]                        
     Session=hyprland
     XSession=hyprland
     Icon="$userName"/.face
     SystemAccount=false' > /var/lib/AccountsService/users/"$userName"
-    removeSudoUser
+
+    removeSudoUser || return 1
+    echo "Configs installed"
+    return 0
 }
 
 function main {
     # check to see if the user is root
-    if [[ $(id -u) = 0 ]]; then
+    if [[ $(id -u) == 0 && "${BASH_SOURCE[0]}" != "${0}" ]]; then
         echo "Clean install arch?"
         read -rp "[Y/n]: " cleanInstall
         if [[ "$cleanInstall" =~ ^[yY]([eE][sS])?$ ]]; then
@@ -207,7 +225,7 @@ function main {
                 cp -rf etc/* /etc/
             elif [[ -z "$replaceRepos" ]]; then
                 echo "no input"
-                return
+                return 1
             fi
             cd /
             pacman -Syy --noconfirm archlinux-keyring arch-install-scripts
@@ -227,34 +245,34 @@ function main {
 
                 if [[ -z "$partRoot" ]]; then
                     echo "No root provided, stopping installation"
-                    return
+                    return 1
                 else
-                    mount "$partRoot" /mnt || exit
-                    cd /mnt || exit
-                    btrfs subvolume create @ || exit
+                    mount "$partRoot" /mnt || return 1
+                    cd /mnt || return 1
+                    btrfs subvolume create @ || return 1
                 fi
 
                 if [[ -z "$partHome" ]]; then
                     btrfs subvolume create @home
                     cd /
                     umount /mnt
-                    mount -t btrfs -o subvol=@ "$partRoot" /mnt || exit
+                    mount -t btrfs -o subvol=@ "$partRoot" /mnt || return 1
                     mkdir /mnt/home 
-                    mount -t btrfs -o subvol=@home "$partRoot" /mnt/home || exit
+                    mount -t btrfs -o subvol=@home "$partRoot" /mnt/home || return 1
                 else
                     cd /
                     umount /mnt
-                    mount -t btrfs -o subvol=@ "$partRoot" /mnt || exit
+                    mount -t btrfs -o subvol=@ "$partRoot" /mnt || return 1
                     mkdir /mnt/home
-                    mount "$partHome" /mnt/home || exit
+                    mount "$partHome" /mnt/home || return 1
                 fi
 
                 mkdir -p /mnt/boot/efi
                 if [[ -z "$partBoot" ]]; then
                     echo "Bios boot is not supported, need a fat32 efi partition"
-                    return
+                    return 1
                 else
-                    mount "$partBoot" /mnt/boot/efi || exit
+                    mount "$partBoot" /mnt/boot/efi || return 1
                 fi
 
                 if [[ -z "$partSwap" ]]; then
@@ -266,38 +284,42 @@ function main {
                 fi
             elif [[ -z "$autoMount" ]]; then
                 echo "no input"
-                return
+                return 1
             fi
 
-            pacstrap -c /mnt $(cat "$archPackages") || exit
+            pacstrap -c /mnt $(cat "$archPackages") || return 1
             mkdir /mnt/kcs-reasonable-configs
             cp -r "$repoLocation"/* "$repoLocation"/.* /mnt/kcs-reasonable-configs/
             repoLocation="/kcs-reasonable-configs"
-            export -f chrootSetup extraPackages configSetup cloneRepo getAccount createAccount addUserToSudo createSudoUser removeSudoUser checkAndFixFstab || exit
-            export userName repoLocation || exit
+            export -f chrootSetup extraPackages configSetup cloneRepo getAccount \
+                createAccount addUserToSudo createSudoUser removeSudoUser checkAndFixFstab
+            export userName repoLocation
             output=$(arch-chroot /mnt bash -c 'chrootSetup "$@"' _ "$partRoot" "$partBoot" "$partSwap" "$partHome")
             if [ $? -ne 0 ]; then
-                echo "Error: chrootSetup failed."
-                exit 1
+                return 1
             fi
             userName=$(echo "$output" | tail -n 1)
             read -rp "Name of the machine?: " hostName
             if [[ -z "$hostName" ]]; then
                 echo "no input"
-                return
+                return 1
             fi
             echo "$hostName" > /mnt/etc/hostname
             mkdir -p /mnt/home/"$userName"/.cache/yay
             cp -r /home/*/.cache/yay/* /mnt/home/"$userName"/.cache/yay/
-            arch-chroot /mnt /bin/bash -c extraPackages
-            arch-chroot /mnt /bin/bash -c configSetup
+            handError() {
+                arch-chroot /mnt /bin/bash -c removeSudoUser
+                return 1
+            }
+            arch-chroot /mnt /bin/bash -c extraPackages || handError
+            arch-chroot /mnt /bin/bash -c configSetup || handError
 
             swapoff -a
-            umount -l /mnt
-            return
+            umount -lf /mnt || return 1
+            return 0
         elif [[ -z "$cleanInstall" ]]; then
             echo "no input"
-            return
+            return 1
         fi
         cloneRepo
         echo "Replace repos with arch repos?"
@@ -306,7 +328,7 @@ function main {
             cp -rf etc/* /etc/
         elif [[ -z "$replaceRepos" ]]; then
             echo "no input"
-            return
+            return 1
         fi
         pacman -Syy --noconfirm archlinux-keyring
         pacman -Syyu --noconfirm --nodeps $(cat "$archPackages")
@@ -316,10 +338,13 @@ function main {
             partHome="$(df --output=source,target | grep "/home" | head -n 1 | awk '{print $1}')"
 
             userName="$(chrootSetup "$partRoot" "$partBoot" "$partHome" | tail -n 1)"
+            if [ $? -ne 0 ]; then
+                return 1
+            fi
 
-            extraPackages
-            configSetup
-            return
+            extraPackages || removeSudoUser && return 1
+            configSetup || removeSudoUser && return 1
+            return 0
         else
             echo "Create a new account?"
             read -rp "[Y/n]: " createAccount
@@ -328,26 +353,37 @@ function main {
             else
                 userName="$(getAccount | tail -n 1)"
             fi
+            if [ $? -ne 0 ]; then
+                return 1
+            fi
             if [[ -z "$userName" ]]; then
                 echo "no input"
-                return
+                return 1
             fi
             homeDir=$(getent passwd "$userName" | cut -d: -f6)
             mkdir -p /home/"$homeDir"/.cache/yay
             cp -r /home/*/.cache/yay/* /home/"$homeDir"/.cache/yay/
-            extraPackages
-            configSetup
+            extraPackages || return 1
+            configSetup || return 1
             sudo -S -u "$userName" systemctl --user import-environment
             systemctl start switch-DEs.service
-            return
+            return 0
         fi
     else
-        echo "Need to run as root"
-        return
+        if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+            echo "Need to source the script, not execute it"
+        fi
+        if [[ $(id -u) != 0 ]]; then
+            echo "Need to run script as root"
+        fi
+        return 1
     fi
 }
 
-# if true use the script as a set of functions basically
+# if true use the script as a library basically
 if [ "$1" != true ]; then 
-    main 
+    main ||
+        swapoff -a &&\
+        umount -lf /mnt &&\
+        exit 1
 fi

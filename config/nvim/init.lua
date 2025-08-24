@@ -1,2 +1,2 @@
-User = os.getenv("USER") or "noUser"
+User = os.getenv("USER") or "root"
 require(User)

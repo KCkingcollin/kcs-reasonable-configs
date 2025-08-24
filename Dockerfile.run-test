@@ -5,4 +5,4 @@ COPY . .
 COPY .zshrc /root/
 COPY .zshrc /home/arch/
 
-CMD echo -e "$testInput" | source ./Install.sh && umount -l /mnt && exit;
+CMD echo -e "$testInput" | source ./Install.sh && umount -lf /mnt && exit;

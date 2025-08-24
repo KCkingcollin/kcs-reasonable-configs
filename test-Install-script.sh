@@ -38,6 +38,7 @@ function createTestEV {
     qemu-nbd -d /dev/nbd0
     sudo virsh destroy $vmName &> /dev/null
     sudo virsh net-destroy default &> /dev/null
+    truncate -s 0 "$archTestDisk"
     rm "$archTestDisk" &> /dev/null
 
     qemu-img create -f qcow2 "$archTestDisk" 50G
@@ -142,16 +143,24 @@ function systemTest {
     homeDev="/dev/nbd0p3"
     swapDev="/dev/nbd0p4"
     rootPW="testPass"
-    userName="test"
+    userName="testuser"
     userPass="testPass"
     machineName="testev"
 
-    echo "running system test 1"
-    mountVirtDisk 0 "$archTestDisk"
-    podman run -e testInput="$(createInput)" -it --rm --privileged \
-    --device /dev/nbd0:/dev/nbd0 \
-    test-install-ev
-    umountVirtDisk 0
+    runTest1() {
+        echo "running system test 1"
+        mountVirtDisk 0 "$archTestDisk"
+        podman run -e testInput="$(createInput)" -it --rm --privileged \
+            --device /dev/nbd0:/dev/nbd0 \
+            test-install-ev &&\
+        umountVirtDisk 0 || return 1
+    }
+    test1="Full instalation test\nInput:\n$(createInput)"
+    if ! runTest1; then
+        echo -e "\033[31m[ FAIL ]\033[0m $test1\n"
+        return 1
+    fi
+    echo -e "\033[32m[ PASS ]\033[0m $test1\n"
 
     virsh attach-disk $vmName "$archTestDisk" vdb --persistent --subdriver qcow2
     virsh start $vmName
