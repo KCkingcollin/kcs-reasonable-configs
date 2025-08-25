@@ -1,11 +1,7 @@
 vim.g.mapleader = " "
 vim.keymap.set("i", ",", ", ")
 vim.keymap.set("i", "<c-l>", [[<Esc>"+l]])
--- vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
--- replace Ex with Oil
-vim.keymap.set("n", "<leader>pv", "<CMD>Oil<CR>", { desc = "Open parent directory" })
--- toggle tree
-vim.keymap.set("n", "<leader>pp", "<CMD>NvimTreeToggle ./<CR>", { desc = "Open parent directory" })
+vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 
 vim.keymap.set("n", "U", vim.cmd.redo)
 
@@ -80,7 +76,7 @@ vim.keymap.set("n", "<leader>mr", "<cmd>CellularAutomaton make_it_rain<CR>");
 -- end)
 vim.keymap.set("n", "<leader>m", function()
     vim.cmd("vsplit")
-    vim.cmd("edit ~/.config/nvim/lua/config/remap.lua")
+    vim.cmd("edit ~/.config/nvim/lua/kckingcollin/remap.lua")
 end)
 
 
