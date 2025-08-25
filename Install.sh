@@ -161,7 +161,6 @@ function configSetup {
 
     sudo -S -u "$userName" mkdir "$homeDir"/.config &> /dev/null
     cp -rfp config/* "$homeDir"/.config/
-    mv "$homeDir"/.config/nvim/lua/user "$homeDir"/.config/nvim/lua/"$userName"
     cp -rfp ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$homeDir"/
     cp -rfp ./after.sh "$homeDir"/.config/hypr/
     mv "$homeDir"/.config/hypr/hyprland.conf "$homeDir"/.config/hypr/hyprland.conf.bac
@@ -170,7 +169,6 @@ function configSetup {
     mkdir /root/.config &> /dev/null
     cp -rf config/* /root/.config/
     cp -rf etc/* /etc/
-    mv /root/.config/nvim/lua/user /root/.config/nvim/lua/root
     cp -rf ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 /root/
     cp -rf ./switch-DEs.sh /usr/bin/switch-DEs
     cp -rf ./theme-check.service ./waybar-hyprland.service /usr/lib/systemd/user/
