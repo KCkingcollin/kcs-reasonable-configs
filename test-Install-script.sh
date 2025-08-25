@@ -132,35 +132,36 @@ function createInput {
     echo -e "$test1Input"
 }
 
-function systemTest {
-    runTest1() {
-        createTestEV
+function runTest1 {
+    createTestEV
 
-        cleanInstall="y"
-        replaceRepos="y"
-        autoMount="y"
-        bootDev="/dev/nbd0p1"
-        rootDev="/dev/nbd0p2"
-        homeDev="/dev/nbd0p3"
-        swapDev="/dev/nbd0p4"
-        rootPW="testPass"
-        userName="testuser"
-        userPass="testPass"
-        machineName="testev"
-        echo "running system test 1"
-        mountVirtDisk 0 "$archTestDisk"
-        podman run -e testInput="$(createInput)" -it --rm --privileged \
-            --device /dev/nbd0:/dev/nbd0 \
-            test-install-ev || err=true && err=false
-        umountVirtDisk 0
-        if $err; then return 1; else return 0; fi
-    }
+    cleanInstall="y"
+    replaceRepos="y"
+    autoMount="y"
+    bootDev="/dev/nbd0p1"
+    rootDev="/dev/nbd0p2"
+    homeDev="/dev/nbd0p3"
+    swapDev="/dev/nbd0p4"
+    rootPW="testPass"
+    userName="testuser"
+    userPass="testPass"
+    machineName="testev"
+    echo "running system test 1"
+    mountVirtDisk 0 "$archTestDisk"
+    podman run -e testInput="$(createInput)" -it --rm --privileged \
+        --device /dev/nbd0:/dev/nbd0 \
+        test-install-ev || err=true && err=false
+    umountVirtDisk 0
     test1="Full instalation test\nInput:\n$(createInput)"
-    if ! runTest1; then
+    if $err; then
         echo -e "\033[31m[ FAIL ]\033[0m $test1\n"
         return 1
     fi
     echo -e "\033[32m[ PASS ]\033[0m $test1\n"
+}
+
+function systemTest {
+    runTest1
 
     virsh attach-disk $vmName "$archTestDisk" vdb --persistent --subdriver qcow2
     virsh start $vmName

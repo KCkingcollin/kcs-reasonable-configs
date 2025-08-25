@@ -195,12 +195,6 @@ function configSetup {
 
     rate-mirrors --allow-root --save /etc/pacman.d/mirrorlist arch
 
-    sudo -S -u "$userName" nvim --noplugin --headless -c 'autocmd User PackerComplete quitall' 2> /dev/null
-    nvim --noplugin --headless -c 'autocmd User PackerComplete quitall' 2> /dev/null
-
-    sudo -S -u "$userName" nvim --headless -E +'TSUpdateSync' +'quitall' || return 1
-    nvim --headless -E +'TSUpdateSync' +'quitall' || return 1
-
     bash -c echo '[User]                        
     Session=hyprland
     XSession=hyprland
@@ -307,12 +301,8 @@ function main {
             echo "$hostName" > /mnt/etc/hostname
             mkdir -p /mnt/home/"$userName"/.cache/yay
             cp -r /home/*/.cache/yay/* /mnt/home/"$userName"/.cache/yay/
-            handError() {
-                arch-chroot /mnt /bin/bash -c removeSudoUser
-                return 1
-            }
-            arch-chroot /mnt /bin/bash -c extraPackages || handError
-            arch-chroot /mnt /bin/bash -c configSetup || handError
+            arch-chroot /mnt /bin/bash -c extraPackages || return 1
+            arch-chroot /mnt /bin/bash -c configSetup || return 1
 
             swapoff -a &> /dev/null
             umount -lf /mnt || return 1 && return 0
@@ -341,8 +331,8 @@ function main {
                 return 1
             fi
 
-            extraPackages || removeSudoUser; return 1
-            configSetup || removeSudoUser; return 1 && return 0
+            extraPackages || return 1
+            configSetup || return 1 && return 0
         else
             echo "Create a new account?"
             read -rp "[Y/n]: " createAccount
