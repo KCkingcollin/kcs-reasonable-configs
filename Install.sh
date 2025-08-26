@@ -162,7 +162,6 @@ function configSetup {
     sudo -S -u "$userName" mkdir "$homeDir"/.config &> /dev/null
     cp -rfp config/* "$homeDir"/.config/
     cp -rfp ./.zshrc ./.themes ./.icons ./.gtkrc-2.0 "$homeDir"/
-    cp -rfp ./after.sh "$homeDir"/.config/hypr/
     mv "$homeDir"/.config/hypr/hyprland.conf "$homeDir"/.config/hypr/hyprland.conf.bac
     cp -rfp ./hyprland.conf.once "$homeDir"/.config/hypr/hyprland.conf
 
@@ -176,6 +175,9 @@ function configSetup {
     mkdir -p /root/.local/share/nvim
     mkdir -p /root/.local/state/nvim
     chown -R root:root /root/
+
+    cp -rf ./AfterInstall.sh /bin/
+    echo "$userName    ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/AfterInstallRule
 
     chsh -s /bin/zsh "$userName"
     chsh -s /bin/zsh root
@@ -286,10 +288,7 @@ function main {
             export -f chrootSetup extraPackages configSetup cloneRepo getAccount \
                 createAccount addUserToSudo createSudoUser removeSudoUser checkAndFixFstab
             export userName repoLocation
-            output=$(arch-chroot /mnt bash -c 'chrootSetup "$@"' _ "$partRoot" "$partBoot" "$partSwap" "$partHome")
-            if [ $? -ne 0 ]; then
-                return 1
-            fi
+            output=$(arch-chroot /mnt bash -c 'chrootSetup "$@"' _ "$partRoot" "$partBoot" "$partSwap" "$partHome") || return 1
             userName=$(echo "$output" | tail -n 1)
             read -rp "Name of the machine?: " hostName
             if [[ -z "$hostName" ]]; then
@@ -325,10 +324,7 @@ function main {
             partBoot="$(df --output=source,target | grep "/boot" | head -n 1 | awk '{print $1}')"
             partHome="$(df --output=source,target | grep "/home" | head -n 1 | awk '{print $1}')"
 
-            userName="$(chrootSetup "$partRoot" "$partBoot" "$partHome" | tail -n 1)"
-            if [ $? -ne 0 ]; then
-                return 1
-            fi
+            userName="$(chrootSetup "$partRoot" "$partBoot" "$partHome" | tail -n 1)" || return 1
 
             extraPackages || return 1
             configSetup || return 1 && return 0
@@ -336,12 +332,9 @@ function main {
             echo "Create a new account?"
             read -rp "[Y/n]: " createAccount
             if [[ "$createAccount" =~ ^[yY]([eE][sS])?$ ]]; then
-                userName="$(createAccount | tail -n 1)"
+                userName="$(createAccount | tail -n 1)" || return 1
             else
-                userName="$(getAccount | tail -n 1)"
-            fi
-            if [ $? -ne 0 ]; then
-                return 1
+                userName="$(getAccount | tail -n 1)" || return 1
             fi
             if [[ -z "$userName" ]]; then
                 echo "no input"

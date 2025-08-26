@@ -198,13 +198,14 @@ return {
         opts = {
             diagnostic_colors = {
                 error = "DiagnosticError",
-                -- warn  = "DiagnosticWarn",
+                warn  = "DiagnosticWarn",
                 info  = "DiagnosticInfo",
                 hint  = "DiagnosticHint",
             },
             diagnostic_symbols = {
                 error = "",
                 -- warn = "",
+                warn = "",
                 info = "",
                 hint = "󰌶",
             }
