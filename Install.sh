@@ -304,6 +304,7 @@ function main {
 
             swapoff -a &> /dev/null
             umount -lf /mnt || return 1 && return 0
+
         elif [[ -z "$cleanInstall" ]]; then
             echo "no input"
             return 1
@@ -371,6 +372,9 @@ if [ "$1" != true ]; then
     main || (
         swapoff -a
         umount -lf /mnt
+        echo -e "\033[31mFailed to Install\033[0m"; 
         exit 1
-        ) && exit 0
+        ) &&\
+            echo -e "\033[32mFinished Installation\033[0m"; 
+            exit 0
 fi
