@@ -155,7 +155,7 @@ function runTest1 {
         test-install-ev || err=true && err=false
     umountRawDisk 0
     test1="Full instalation test\nInput:\n$(createInput)"
-    if $err; then
+    if [ "$err" ]; then
         echo -e "\033[31m[ FAIL ]\033[0m $test1\n"
         return 1
     fi

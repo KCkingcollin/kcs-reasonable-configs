@@ -204,8 +204,7 @@ return {
             },
             diagnostic_symbols = {
                 error = "",
-                -- warn = "",
-                warn = "",
+                warn = "",
                 info = "",
                 hint = "󰌶",
             }

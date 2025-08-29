@@ -5,4 +5,6 @@ COPY . .
 COPY .zshrc /root/
 COPY .zshrc /home/arch/
 
-CMD echo -e "$testInput" | source ./Install.sh && umount -lf /mnt &> /dev/null && exit;
+COPY ./etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist
+
+# CMD echo -e "$testInput" | source ./Install.sh && umount -lf /mnt &> /dev/null && exit;
