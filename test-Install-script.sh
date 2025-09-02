@@ -4,9 +4,36 @@ archTestDisk="/var/lib/libvirt/images/arch-test.raw"
 vmIP=10.0.69.3
 sshPort=22
 vmName="arch-test-vm"
+testInput=""
 declare -a loopDevices
 
 trap cleanup SIGINT SIGTERM
+
+function containerAutoMount {
+    mount "$2" /mnt &&
+    cd /mnt &&
+    btrfs subvolume create @ &&
+    cd .. &&
+    umount -l /mnt || return 1
+
+    mount -o subvol=@ "$2"
+}
+
+function containerTest {
+    cp .zshrc /root/
+    cp .zshrc /home/arch/
+    cp ./etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist
+    echo -e "$testInput" | /bin/zsh -c './Install' || umount -lf /mnt &> /dev/null
+}
+
+function containerManualTest {
+    cp .zshrc /root/
+    cp .zshrc /home/arch/
+    cp ./etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist
+    /bin/zsh -c './Install'
+    /bin/zsh
+    umount -lf /mnt &> /dev/null
+}
 
 # arg 1: Which loop device to use (integer)
 # arg 2: The location of the raw disk file
@@ -42,6 +69,9 @@ function createTestEV {
     fi
     sudo virsh destroy $vmName &> /dev/null
     sudo virsh net-destroy default &> /dev/null
+
+    mv "$archTestDisk" "$archTestDisk".ded &> /dev/null
+    rm "$archTestDisk".ded &> /dev/null &
     fallocate -l 50G "$archTestDisk"
 
     mountRawDisk 0 "$archTestDisk"
@@ -53,22 +83,20 @@ function createTestEV {
         mkpart "rootfs" btrfs 1GiB 21GiB \
         mkpart "home" ext4 21GiB 45GiB \
         mkpart "swap" linux-swap 45GiB 100% ||
-        exit
+        return 1
 
-    mkfs.fat -F32 "${loopDevices[0]}"p1 || exit
-    mkfs.btrfs -f "${loopDevices[0]}"p2 || exit
-    yes | mkfs.ext4 "${loopDevices[0]}"p3 || exit
-    mkswap "${loopDevices[0]}"p4 || exit
+    mkfs.fat -F32 "${loopDevices[0]}"p1 || return 1
+    mkfs.btrfs "${loopDevices[0]}"p2 || return 1
+    mkfs.ext4 "${loopDevices[0]}"p3 || return 1
+    mkswap "${loopDevices[0]}"p4 || return 1
 
     umountRawDisk 0
     
     if ! podman image exists kcs-reasonable-configs-install-ev; then
-        podman load -i ./install-ev-main.tar
+        podman build --dns 8.8.8.8 -f Dockerfile.main-ev -t kcs-reasonable-configs-install-ev .
     fi
-    if podman image exists test-install-ev; then
-        podman rmi -f test-install-ev
-    fi
-    podman build --dns 8.8.8.8 -f Dockerfile.run-test -t test-install-ev .
+
+    go build . || return 1
 
     if ! virsh define ./$vmName.xml &> /dev/null ; then
         virsh undefine $vmName --nvram
@@ -82,32 +110,6 @@ function createTestEV {
 
     virsh net-start default
     virsh net-autostart default
-}
-
-function startAndConnect {
-    virsh start $vmName
-    echo "VM booting..."
-
-    waitTime=0.5
-    attempts=1
-    waited=$waitTime
-    printf "\n\n\n"
-    while ! nc -z -w 1 $vmIP $sshPort; do
-        if [[ attempts -gt 30 ]]; then
-            echo "Failed to connect to VM"
-            exit
-        fi
-        printf "\e[1A\e[2K\e[1A\e[2K\e[1A\e[2K"
-        printf "Connection attempts: %s\nWaiting for %s seconds\nWaited %s seconds\n" "$attempts" "$waitTime" "$waited"
-        ((attempts++))
-        sleep "$waitTime"
-        waitTime=$(echo "$waitTime * 1.25" | bc)
-        waited=$(echo "$waitTime + $waited" | bc)
-    done
-
-    sed -i "/$vmIP/d" "$HOME"/.ssh/known_hosts
-    ssh-keyscan "$vmIP" | grep "ed25519" >> "$HOME"/.ssh/known_hosts
-    echo "Connection established"
 }
 
 function createInput {
@@ -134,44 +136,59 @@ function createInput {
 }
 
 function runTest1 {
-    createTestEV
+    if createTestEV; then
+        cleanInstall="y"
+        replaceRepos="y"
+        autoMount="y"
+        bootDev="${loopDevices[0]}p1"
+        rootDev="${loopDevices[0]}p2"
+        homeDev="${loopDevices[0]}p3"
+        swapDev="${loopDevices[0]}p4"
+        rootPW="testPass"
+        userName="testuser"
+        userPass="testPass"
+        machineName="testev"
 
-    cleanInstall="y"
-    replaceRepos="y"
-    autoMount="y"
-    bootDev="${loopDevices[0]}p1"
-    rootDev="${loopDevices[0]}p2"
-    homeDev="${loopDevices[0]}p3"
-    swapDev="${loopDevices[0]}p4"
-    rootPW="testPass"
-    userName="testuser"
-    userPass="testPass"
-    machineName="testev"
+        echo "Copying project dir to a tar"
+        tar -C "$(pwd)" -cf /tmp/src.tar .
 
-    echo "running system test 1"
-    mountRawDisk 0 "$archTestDisk"
-    podman run -e testInput="$(createInput)" -it --rm --privileged \
-        --device="${loopDevices[0]}":"${loopDevices[0]}" \
-        test-install-ev || err=true && err=false
-    umountRawDisk 0
+        echo "running system test 1..."
+        mountRawDisk 0 "$archTestDisk"
+        if [ "$1" == "-m" ]; then 
+            podman run -it --rm --privileged \
+                -v /tmp/src.tar:/tmp/src.tar:ro \
+                kcs-reasonable-configs-install-ev \
+                bash -c "$(declare -f containerManualTest); tar -C . -xf /tmp/src.tar; containerManualTest" &&\
+                err=false || err=true
+        else
+            podman run -e testInput="$(createInput)" -it --rm --privileged \
+                -v /tmp/src.tar:/tmp/src.tar:ro \
+                kcs-reasonable-configs-install-ev \
+                bash -c "$(declare -f containerTest); tar -C . -xf /tmp/src.tar; containerTest" &&\
+                err=false || err=true
+        fi
+        umountRawDisk 0
+    else 
+        err=true
+    fi
     test1="Full instalation test\nInput:\n$(createInput)"
-    if [ "$err" ]; then
+    if $err ; then
         echo -e "\033[31m[ FAIL ]\033[0m $test1\n"
         return 1
     fi
     echo -e "\033[32m[ PASS ]\033[0m $test1\n"
-}
-
-function systemTest {
-    runTest1
 
     virsh attach-disk $vmName "$archTestDisk" vda --persistent --subdriver raw
     virsh start $vmName
     echo "VM booting..."
 }
 
+function systemTest {
+    runTest1 "$1"
+}
+
 if [[ $(id -u) = 0 ]]; then
-    systemTest
+    systemTest "$1"
     exit
 else 
     echo "needs to be run as root"

@@ -1,5 +1,4 @@
 vim.g.mapleader = " "
-vim.keymap.set("i", ",", ", ")
 vim.keymap.set("i", "<c-l>", [[<Esc>"+l]])
 -- vim.keymap.set("n", "<leader>pv", vim.cmd.Ex)
 -- replace Ex with Oil

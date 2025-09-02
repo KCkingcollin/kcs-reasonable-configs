@@ -109,7 +109,6 @@ vim.api.nvim_create_autocmd('BufEnter', {
     end,
 })
 
--- Autocommand for buffer read post
 vim.api.nvim_create_autocmd('BufReadPost', {
     pattern = '*',
     callback = function()
@@ -120,13 +119,12 @@ vim.api.nvim_create_autocmd('BufReadPost', {
         end
     end,
 })
--- Autocommand to disable the keybinding when Neovim opens
+
 vim.api.nvim_create_autocmd("VimEnter", {
   pattern = "*",
   callback = disable_keybinding,
 })
 
--- Autocommand to enable the keybinding when Neovim exits
 vim.api.nvim_create_autocmd("VimLeave", {
   pattern = "*",
   callback = enable_keybinding,
@@ -136,3 +134,27 @@ vim.api.nvim_create_autocmd("VimEnter", {
     pattern = "*",
     command = "tnoremap <Esc> <C-\\><C-n>"
 })
+
+vim.api.nvim_create_autocmd({ "TermOpen" }, {
+    pattern = "*",
+    callback = function()
+        vim.opt_local.spell = false
+    end,
+})
+
+local function customTermCmd()
+    vim.cmd('terminal')
+    vim.opt_local.spell = false
+    vim.cmd('startinsert')
+    vim.api.nvim_feedkeys("clear && fastfetch\n", 'i', true)
+end
+
+vim.api.nvim_create_user_command(
+  "OpenCustomTerm",
+  customTermCmd,
+  {
+    nargs = "*",
+    bang = true,
+    desc = "Opens a terminal with some custom stuff",
+  }
+)

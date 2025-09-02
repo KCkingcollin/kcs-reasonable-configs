@@ -19,5 +19,5 @@ yes | hyprpm -n add https://github.com/hyprwm/hyprland-plugins
 yes | hyprpm -n enable hyprbars
 yes | hyprpm -n enable hyprexpo
 yes | hyprctl reload
-mv "$HOME/.config/hypr/hyprland.conf.bac" "$HOME/.config/hypr/hyprland.conf"
+mv "$HOME/.config/hypr/hyprland.conf.bak" "$HOME/.config/hypr/hyprland.conf"
 sudo rm /etc/sudoers.d/AfterInstallRule
