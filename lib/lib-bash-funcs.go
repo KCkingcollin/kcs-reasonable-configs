@@ -12,10 +12,15 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/creack/pty"
 	"golang.org/x/term"
+)
+
+var (
+	runCmdLock sync.Mutex
 )
 
 type CmdInfo struct {
@@ -31,19 +36,26 @@ type CmdInfo struct {
 // flag 2: noStderr
 // flag 3: enableStdin
 func Run(command ...string) CmdInfo {
+	runCmdLock.Lock()
+	defer runCmdLock.Unlock()
+
 	var flags string
 	if strings.Contains(command[len(command)-1], "-F") {
 		flags = command[len(command)-1]
 		command = command[:len(command)-1]
 	}
 
+	if !find("/bin/bash") {
+		CritError("We kinda need bash for this")
+	}
+
 	cmd := exec.Command("bash", "-c", strings.Join(command, " "))
 
 	if strings.Contains(flags, "enableStdin") {
-		fmt.Println("stdin enabled")
 		cmd.Stdin = os.Stdin
 	}
 
+	// something about pty freezes in an environment without a bin folder
 	ptmx, err := pty.Start(cmd)
 	if err != nil {
 		return CmdInfo{false, 1, "", fmt.Errorf("failed to start pty: %v", err)}
@@ -61,6 +73,7 @@ func Run(command ...string) CmdInfo {
 	} else {
 		cmd.Stderr = io.MultiWriter(os.Stderr, &stderrBuffer)
 	}
+
 	if strings.Contains(flags, "noStdout") {
 		go func () { _, _ = io.Copy(&stdoutBuffer, ptmx) }()
 	} else {
@@ -69,11 +82,91 @@ func Run(command ...string) CmdInfo {
 
 	err = cmd.Wait()
 	return CmdInfo{
-		Success: cmd.ProcessState.Success(),
-		ExitCode: cmd.ProcessState.ExitCode(),
-		Output:   stdoutBuffer.String(),
-		Error:    fmt.Errorf("%v%s", err, stderrBuffer.String()),
+		Success: 	cmd.ProcessState.Success(),
+		ExitCode: 	cmd.ProcessState.ExitCode(),
+		Output:   	strings.ReplaceAll(strings.TrimSpace(stdoutBuffer.String()), "\r\n", "\n"),
+		Error:    	fmt.Errorf("%v%s", err, stderrBuffer.String()),
 	}
+}
+
+func GetRootFD() *os.File {
+	root, err := os.Open("/")
+	if err != nil {
+		CritError(fmt.Errorf("open root folder: %v", err))
+	}
+	return root
+}
+
+func Chroot(location string) func() {
+	oldRoot := GetRootFD()
+
+	dirs := []string{"proc", "dev", "dev/pts", "dev/shm", "run", "tmp", "sys"}
+	for _, d := range dirs {
+		path := fp.Join(location, d)
+		if err := os.MkdirAll(path, 0755); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to create %s: %v\n", path, err)
+			CritError()
+		}
+	}
+
+    _ = syscall.Mount("", "/", "", syscall.MS_PRIVATE|syscall.MS_REC, "")
+
+    Mount("proc", fp.Join(location, "proc"), "proc", "nosuid,noexec,nodev")
+
+    Mount("/sys", fp.Join(location, "sys"), "", "rbind")
+    Mount("/sys", fp.Join(location, "sys"), "", "make-rslave")
+
+	Mount("/dev", fp.Join(location, "dev"), "devtmpfs", "")
+	Mount("/dev/pts", fp.Join(location, "dev/pts"), "devpts", "")
+	Mount("shm", fp.Join(location, "dev/shm"), "tmpfs", "mode=1777,nosuid,nodev")
+
+    Mount("/run", fp.Join(location, "run"), "", "bind,make-private")
+
+	Mount("tmp", fp.Join(location, "tmp"), "tmpfs", "mode=1777,nosuid,nodev,strictatime")
+
+	src, err := fp.EvalSymlinks("/etc/resolv.conf")
+    if err == nil {
+        dest := fp.Join(location, "etc/resolv.conf")
+        if _, err := os.Stat(dest); os.IsNotExist(err) {
+            f, _ := os.Create(dest)
+            _ = f.Close()
+        }
+        Mount(src, dest, "", "bind")
+        Mount(src, dest, "", "remount,ro,bind")
+    }
+
+    if err := syscall.Chroot(location); err != nil {
+        fmt.Fprintln(os.Stderr, fmt.Errorf("failed to chroot: %v", err))
+        CritError()
+    }
+    Cd("/")
+
+    _ = os.Setenv("PATH", "/usr/local/sbin:/usr/local/bin:/usr/bin:/sbin:/bin")
+
+	escape := func() {
+		EscapeChroot(oldRoot)
+		Umount(fp.Join(location, "/etc/resolv.conf"))
+		for _, d := range dirs {
+			path := fp.Join(location, d)
+			Umount(path)
+		}
+		_ = oldRoot.Close()
+	}
+	return escape
+}
+
+func EscapeChroot(oldRootFD *os.File) {
+	if err := syscall.Fchdir(int(oldRootFD.Fd())); err == nil {
+		err := syscall.Chroot(".")
+		if err != nil {
+			fmt.Fprintln(os.Stderr, fmt.Errorf("failed to chroot back into main root: %v", err))
+			CritError()
+		}
+	} else {
+		fmt.Fprintln(os.Stderr, fmt.Errorf("failed to chroot back into the file descriptor %d: %v", oldRootFD.Fd(), err))
+		CritError()
+	}
+	_ = oldRootFD.Close()
 }
 
 // Runs command with input
@@ -240,7 +333,7 @@ func Mount(source, target, fstype, options string) {
             out := Run("blkid", "-o", "value", "-s", "TYPE", source).Output
             fstype = strings.TrimSpace(out)
             if fstype == "" {
-                CritError(fmt.Printf("Could not detect fstype for %s\n", source))
+                CritError(fmt.Errorf("could not detect fstype for %s", source))
             }
         }
     }
@@ -296,7 +389,7 @@ func Mount(source, target, fstype, options string) {
     }
 
     if err := syscall.Mount(source, target, fstype, flags, data); err != nil {
-        CritError(fmt.Printf("Mount %s to %s failed: %v\n", source, target, err))
+        CritError(fmt.Errorf("mount %s to %s failed: %v", source, target, err))
     }
 }
 

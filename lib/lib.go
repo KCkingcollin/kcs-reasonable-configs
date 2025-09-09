@@ -4,10 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/user"
 	fp "path/filepath"
 	"regexp"
 	"strings"
 	"syscall"
+
+	"golang.org/x/term"
 )
 
 const (
@@ -18,7 +21,6 @@ const (
 )
 
 var (
-	UserName 		string
 	HomeDir 		string
 	RepoLocation 	string
 	ArchPkgsLoc 	string
@@ -27,6 +29,24 @@ var (
 
 func CritError(err ...any) {
 	panic(fmt.Sprintln(append(err, "\033[31m\nCritical Failure\033[0m")...))
+}
+
+func AccountExists(userName string) bool {
+	_, err := user.Lookup(userName)
+	return err == nil
+}
+
+func SetupSudoersFile() {
+	if strings.Contains(Cat("/etc/sudoers"), "root") {
+		if err := UncommentLine("/etc/sudoers", "#", "root", "ALL=(ALL:ALL)"); err != nil {CritError(err)}
+	} else {
+		PrependTextToFile("root\tALL=(ALL:ALL) ALL\n", "/etc/sudoers")
+	}
+	if strings.Contains(Cat("/etc/sudoers"), "@includedir") {
+		if err := UncommentLine("/etc/sudoers", "#", "@includedir"); err != nil {CritError(err)}
+	} else {
+		AddTextToFile("@includedir /etc/sudoers.d\n", "/etc/sudoers")
+	}
 }
 
 func CopyYayCache(homeLoc string) {
@@ -52,14 +72,39 @@ func InChroot() bool {
 }
 
 // asks the user the question, and outputs the response
-func AskUser(question string, emptyInput ...bool) string {
-    fmt.Print(question)
+// first option enables null input
+// second option enables hidden input
+func AskUser(question string, options ...bool) string {
 	var userInput string
-	if _, err := fmt.Scanln(&userInput); err != nil {CritError(err)}
-	if userInput == "" && (len(emptyInput) > 0 && !emptyInput[0]) {
-		CritError("Error: empty input")
+	for {
+		fmt.Print(question)
+		if len(options) > 1 && options[1] {
+			input, _ := term.ReadPassword(0)
+			userInput = string(input)
+		} else {
+			_, _ = fmt.Scanln(&userInput)
+		}
+		if userInput == "" && (len(options) < 1 || !options[0]) {
+			fmt.Println("Cant be empty")
+		} else {
+			break
+		}
 	}
 	return userInput
+}
+
+func AskForPassword(account string) string {
+	var pass string
+	for {
+		pass = AskUser("Set "+account+" password\nPassowrd: ", false, true)
+		if pass == AskUser("\nConfirm Passowrd: ", false, true) {
+			break
+		} else {
+			fmt.Println("\nPasswords did not match.")
+		}
+	}
+	fmt.Println()
+	return pass
 }
 
 func IsYes(input string) bool {
@@ -70,7 +115,7 @@ func IsYes(input string) bool {
 	return match
 }
 
-func CloneRepo() {
+func CloneRepo(userName string) {
 	if HomeDir != "" {
 		if RepoLocation != "" && find(RepoLocation) {
 			if !find(fp.Join(HomeDir, RepoName)) {
@@ -96,7 +141,7 @@ func CloneRepo() {
 	Cd(RepoLocation)
 
 	if HomeDir != "" && fp.Base(Pwd()) == RepoName {
-		Run("chown", "-R", UserName+":"+UserName, ".")
+		Run("chown", "-R", userName+":"+userName, ".")
 	}
 }
 
@@ -156,34 +201,20 @@ func AddUserToSudo(username string) {
 	}
 }
 
-func CreateAccount() {
-	UserName = AskUser("Name of the account?: ")
-	Run("useradd", "-m", UserName)
-	var UserPass string
-	for {
-		UserPass = AskUser("Set password\nPassowrd: ")
-		if UserPass == AskUser("Confirm Passowrd: ") {
-			break
-		} else {
-			fmt.Println("Password did not match.")
-		}
-	}
-	if !RunI(UserPass+"\n"+UserPass, "passwd", UserName).Success {CritError()}
-	AddUserToSudo(UserName)
-	HomeDir = GetHomeDir(UserName)
+func CreateAccount(userName, userPass string) {
+	Run("useradd", "-m", userName)
+	if !RunI(userPass+"\n"+userPass, "passwd", userName).Success {CritError()}
+	AddUserToSudo(userName)
+	HomeDir = GetHomeDir(userName)
 }
 
-func GetAccount() {
-	UserName = AskUser(
-		"Provide the account user name you want to set the environment up with\n"+
-		"Username?: ", 
-	)
-	AddUserToSudo(UserName)
-	HomeDir = GetHomeDir(UserName)
+func GetAccount(userName string) {
+	AddUserToSudo(userName)
+	HomeDir = GetHomeDir(userName)
 }
 
-func CreateSudoUser() {
-	MkFileWithText(UserName+"\tALL=(ALL) NOPASSWD: ALL\n", TempSudoerFile)
+func CreateSudoUser(userName string) {
+	MkFileWithText(userName+"\tALL=(ALL) NOPASSWD: ALL\n", TempSudoerFile)
 }
 
 func RemoveSudoUser() {
@@ -193,12 +224,37 @@ func RemoveSudoUser() {
 	}
 }
 
-func CheckAndFixFstab(dev ...string) {
+func FindBlockDevices() []string {
+	var mounts []string
+
+	data, err := os.ReadFile("/proc/mounts")
+	if err != nil {CritError(err)}
+
+	for line := range strings.SplitSeq(strings.TrimSpace(string(data)), "\n") {
+		if strings.HasPrefix(line, "/dev/") {
+			mounts = append(mounts, strings.SplitN(line, " ", 2)[0])
+		}
+	}
+
+	data, err = os.ReadFile("/proc/swaps")
+	if err != nil {CritError(err)}
+
+	for line := range strings.SplitSeq(strings.TrimSpace(string(data)), "\n") {
+		if strings.HasPrefix(line, "/dev/") {
+			mounts = append(mounts, strings.SplitN(line, " ", 2)[0])
+		}
+	}
+
+	return mounts
+}
+
+func CheckAndFixFstab() {
+	dev := FindBlockDevices()
 	if len(dev) < 1 {
 		CritError("Error no devices given")
 	}
 	for _, elm := range dev {
-		out := Run("blkid", "-s", "UUID", "-o", "value", elm)
+		out := Run("blkid", "-s", "UUID", "-o", "value", elm, "-F noStdout")
 		if !out.Success {
 			continue
 		}
@@ -214,26 +270,28 @@ func CheckAndFixFstab(dev ...string) {
 			}
 		}
 
-		os.WriteFile("/etc/fstab", []byte(strings.Join(lines, "\n")), 0644)
+		if err := os.WriteFile("/etc/fstab", []byte(strings.Join(lines, "\n")), 0644); err != nil {
+			CritError(err)
+		}
 	}
 }
 
-func InstallyayPackages() {
-	Run("chown", "-R", UserName+":"+UserName, HomeDir)
+func InstallyayPackages(userName string) {
+	Run("chown", "-R", userName+":"+userName, HomeDir)
 	if !Run("pacman", "-Q", "|", "grep", "-q", `"yay"`).Success {
 		if !find("yay-bin") {
-			if !Run(RunAs(UserName, "git", "clone", "https://aur.archlinux.org/yay-bin.git")...).Success {CritError()}
+			if !Run(RunAs(userName, "git", "clone", "https://aur.archlinux.org/yay-bin.git")...).Success {CritError()}
 		}
 		Cd("yay-bin")
-		Run(RunAs(UserName, "makepkg", "-si", "--noconfirm")...)
+		Run(RunAs(userName, "makepkg", "-si", "--noconfirm")...)
 		Cd("..")
 	}
-	Run(Xargs(AurPkgsLoc, RunAs(UserName, "yay", "-Sy", "--noconfirm")...)...)
+	Run(Xargs(AurPkgsLoc, RunAs(userName, "yay", "-Sy", "--noconfirm")...)...)
 }
 
-func ChrootSetup(dev ...string) {
+func ChrootSetup(userName, rootPass, userPass, hostName string) {
 	Run("genfstab", "-U", "/", ">>", "/etc/fstab")
-	CheckAndFixFstab(dev...)
+	CheckAndFixFstab()
 
 	Run("timedatectl", "set-ntp", "true")
 	Run("hwclock", "--systohc")
@@ -243,16 +301,7 @@ func ChrootSetup(dev ...string) {
 	MkFileWithText("en_US.UTF-8 UTF-8", "/etc/locale.gen")
 	Run("locale-gen")
 
-	var RootPass string
-	for {
-		RootPass = AskUser("Set root password\nPassowrd: ")
-		if RootPass == AskUser("Confirm Passowrd: ") {
-			break
-		} else {
-			fmt.Println("Password did not match.")
-		}
-	}
-	if !RunI(RootPass+"\n"+RootPass, "passwd").Success {CritError()}
+	if !RunI(rootPass+"\n"+rootPass, "passwd").Success {CritError()}
 
 	Run("systemctl", "enable", "NetworkManager")
 	Run("systemctl", "enable", "gdm")
@@ -264,22 +313,21 @@ func ChrootSetup(dev ...string) {
     if !Run("grub-install", "--target=x86_64-efi", "--efi-directory=/boot/efi", "--removable", "--recheck").Success {CritError()}
     if !Run("grub-mkconfig", "-o", "/boot/grub/grub.cfg").Success {CritError()}
 
-	CreateAccount()
+	CreateAccount(userName, userPass)
 
-	hostName := AskUser("Name of the machine?: ")
 	MkFileWithText(hostName, "/etc/hostname")
 
-	Run("chown", "-R", UserName+":"+UserName, HomeDir)
+	Run("chown", "-R", userName+":"+userName, HomeDir)
 
 	fmt.Println("\033[32m\nChroot Setup Done\033[0m")
 }
 
-func ExtraPackages() {
-	CreateSudoUser()
+func ExtraPackages(userName string) {
+	CreateSudoUser(userName)
 	defer RemoveSudoUser()
-	CloneRepo()
+	CloneRepo(userName)
 
-	InstallyayPackages()
+	InstallyayPackages(userName)
 
 	if !find("castle-shell") {
 		if !Run("git", "clone", "https://github.com/KCkingcollin/castle-shell").Success {CritError()}
@@ -288,19 +336,19 @@ func ExtraPackages() {
 	Run("go", "build", "-o", "/usr/bin/color-checker")
 	Cd("../..")
 
-	Run("flatpak", "override", "--filesystem=\"/home/UserName\"/.themes")
-	Run("flatpak", "override", "--filesystem=\"/home/UserName\"/.icons")
-	Run("flatpak", "override", "--filesystem=\"/home/UserName\"/.gtkrc-2.0")
+	Run("flatpak", "override", "--filesystem=\"/home/userName\"/.themes")
+	Run("flatpak", "override", "--filesystem=\"/home/userName\"/.icons")
+	Run("flatpak", "override", "--filesystem=\"/home/userName\"/.gtkrc-2.0")
 	Run("flatpak", "override", "--env=GTK_THEME=Adwaita-dark")
 	Run("flatpak", "override", "--env=ICON_THEME=Adwaita-dark")
 
 	fmt.Println("\033[32m\nExtra Packages Installed\033[0m")
 }
 
-func ConfigSetup() {
-	CreateSudoUser()
+func ConfigSetup(userName string) {
+	CreateSudoUser(userName)
 	defer RemoveSudoUser()
-	CloneRepo()
+	CloneRepo(userName)
 
     Mv(fp.Join(HomeDir, "/.config/nvim"), fp.Join(HomeDir, "/.config/nvim.bak")) 
     Mv(fp.Join(HomeDir, "/.config/fastfetch"), fp.Join(HomeDir, "/.config/fastfetch.bak")) 
@@ -328,7 +376,7 @@ func ConfigSetup() {
     Mv("/root/.icons", "/root/.icons.bak") 
     Mv("/root/.gtkrc-2.0", "/root/.gtkrc-2.0.bak") 
 
-	FuncAs(UserName, func(){Mkdir(fp.Join(HomeDir,"/.config"))})
+	FuncAs(userName, func(){Mkdir(fp.Join(HomeDir,"/.config"))})
 	Cp("config/*", fp.Join(HomeDir, "/.config")+"/")
 	Cp("./.zshrc", "./.themes", "./.icons", "./.gtkrc-2.0", HomeDir+"/")
 	Mv(fp.Join(HomeDir, "/.config/hypr/hyprland.conf"), fp.Join(HomeDir, "/.config/hypr/hyprland.conf.bak"))
@@ -343,21 +391,21 @@ func ConfigSetup() {
     Cp("./switch-DEs.service", "/etc/systemd/system/")
 
 	Cp("AfterInstall.sh", "/bin/")
-	MkFileWithText(UserName+"\tALL=(ALL:ALL) NOPASSWD: ALL", "/etc/sudoers.d/AfterInstallRule")
+	MkFileWithText(userName+"\tALL=(ALL:ALL) NOPASSWD: ALL", "/etc/sudoers.d/AfterInstallRule")
 
-	Run("chsh", "-s", "/bin/zsh", UserName)
+	Run("chsh", "-s", "/bin/zsh", userName)
 	Run("chsh", "-s", "/bin/zsh", "root")
 
 	if !find(HomeDir+"/Pictures/background.jpg") {
-		FuncAs(UserName, func(){Mkdir(fp.Join(HomeDir, "/Pictures"))})
+		FuncAs(userName, func(){Mkdir(fp.Join(HomeDir, "/Pictures"))})
 		Cp("background.jpg", HomeDir+"/Pictures/background.jpg")
 	}
 
-	Run("chown", "-R", UserName+":"+UserName, HomeDir)
+	Run("chown", "-R", userName+":"+userName, HomeDir)
 	Run("chown", "-R", "root:root", "/root")
 
-	Run(RunAs(UserName, "gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", "\"Adwaita-dark\"")...)
-	Run(RunAs(UserName, "gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "\"prefer-dark\"")...)
+	Run(RunAs(userName, "gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", "\"Adwaita-dark\"")...)
+	Run(RunAs(userName, "gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "\"prefer-dark\"")...)
 	Run("gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", "\"Adwaita-dark\"")
 	Run("gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "\"prefer-dark\"")
 
@@ -367,9 +415,9 @@ func ConfigSetup() {
 		"[User]\n"+
 		"Session=hyprland\n"+
 		"XSession=hyprland\n"+
-		"Icon="+UserName+"/.face\n"+
+		"Icon="+userName+"/.face\n"+
 		"SystemAccount=false\n",
-		"/var/lib/AccountsService/users/"+UserName, 
+		"/var/lib/AccountsService/users/"+userName, 
 	)
 
 
