@@ -1,4 +1,8 @@
 @import "../castle-shell/colors.css";
+* {
+    font-family: "OpenDyslexicNerdFont"; 
+    font-size: 18px; 
+}
 @define-color text-color-disabled rgb(150, 150, 150);
 .notification-row {
   outline: none;

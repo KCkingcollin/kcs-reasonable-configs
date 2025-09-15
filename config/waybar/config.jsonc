@@ -79,11 +79,11 @@
     "on-click": "firefox --new-window https://calendar.proton.me/"
 },
 "cpu": {
-    "format": "{usage}% `",
+    "format": "{usage}% ",
     "tooltip": false
 },
 "memory": {
-    "format": "{}% `"
+    "format": "{}% "
 },
 "temperature": {
         // "thermal-zone": 2,
@@ -95,7 +95,7 @@
 },
 "backlight": {
         // "device": "acpi_video1",
-        "format": "{percent}% {icon}`",
+        "format": "{percent}% {icon}",
         "format-icons": ["", "", "", "", "", "", "", "", ""]
 },
 "battery": {
@@ -104,8 +104,8 @@
             "warning": 15,
             "critical": 5
     },
-    "format": "{capacity}% {icon}` ",
-    "format-full": "{capacity}% {icon}`",
+    "format": "{capacity}% {icon} ",
+    "format-full": "{capacity}% {icon}",
     "format-charging": "{capacity}% ",
     "format-plugged": "{capacity}% ",
     "format-alt": "{time} {icon}` ",
@@ -131,7 +131,7 @@
         // "interface": "wlp2*", // (Optional) To force the use of this interface
         //"format-wifi": "{essid} ({signalStrength}%) ",
         //"format-ethernet": "{ipaddr}/{cidr} ",
-        "format-wifi": "{essid} `",
+        "format-wifi": "{essid} ",
         "format-ethernet": "",
         "tooltip-format": "{ifname} via {gwaddr} ",
         "format-linked": "(No IP) ",

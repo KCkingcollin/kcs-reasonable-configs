@@ -2,7 +2,6 @@ package main
 
 import (
 	"Install/lib"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -13,7 +12,6 @@ import (
 const MntLoc = "/mnt"
 
 var (
-	testInput 	bool
 	userInput 	options
 	MainRootFD 	*os.File
 )
@@ -37,13 +35,12 @@ type options struct {
 }
 
 func cleanup() {
-	lib.EscapeChroot(MainRootFD)
-	lib.Run("swapoff", "-a", "-F noStderr")
-	lib.Umount(MntLoc)
-	err := recover()
-	if err != nil {
-		log.Fatal(err)
-	}
+    if lib.InChroot() { lib.EscapeChroot(MainRootFD) }
+    lib.Run("swapoff", "-a", "-F noStdout")
+    lib.Umount(MntLoc)
+    if r := recover(); r != nil {
+        log.Fatal(r)
+    }
 }
 
 func install() {
@@ -56,7 +53,7 @@ func install() {
 	if lib.InChroot() {
 		lib.Run(lib.Xargs(lib.ArchPkgsLoc, "pacman", "-Syu", "--noconfirm")...)
 		lib.ChrootSetup(userInput.userName, userInput.rootPW, userInput.userPW, userInput.machineName)
-		lib.FuncAs(userInput.userName, func(){lib.CopyYayCache(lib.HomeDir)})
+		lib.CopyYayCache(userInput.userName, lib.HomeDir)
 		lib.ExtraPackages(userInput.userName)
 		lib.ConfigSetup(userInput.userName)
 		return
@@ -88,23 +85,23 @@ func install() {
 			lib.Mkdir(fp.Join(MntLoc, "/boot/efi"))
 			lib.Mount(userInput.part.boot, MntLoc+"/boot/efi", "vfat", "")
 
-			lib.Run("swapoff", "-a", "-F noStderr")
+			lib.Run("swapoff", "-a", "-F noStdout")
 			if userInput.part.swap == "" {
-				fmt.Println("Swap file not yet supported, continuing without swap")
+				log.Println("Swap file not yet supported, continuing without swap")
 			} else {
 				lib.Run("swapon", userInput.part.swap)
 			}
 		}
 
 		lib.Run(lib.Xargs(lib.ArchPkgsLoc, "pacstrap", "-c", MntLoc)...)
-		fmt.Println("\033[32m\nArch Packages Installed\033[0m")
+		log.Println("\033[32m\nArch Packages Installed\033[0m")
 		lib.Mkdir(fp.Join(MntLoc+"/kcs-reasonable-configs"))
 		lib.Cp(lib.RepoLocation+"/*", lib.RepoLocation+"/.*", MntLoc+"/"+lib.RepoName+"/")
 		lib.RepoLocation = "/"+lib.RepoName
 		escape := lib.Chroot(MntLoc)
 		lib.ChrootSetup(userInput.userName, userInput.rootPW, userInput.userPW, userInput.machineName)
 		escape()
-		lib.CopyYayCache(fp.Join(MntLoc, lib.HomeDir))
+		lib.CopyYayCache(userInput.userName, fp.Join(MntLoc, lib.HomeDir))
 		escape = lib.Chroot(MntLoc)
 		lib.ExtraPackages(userInput.userName)
 		lib.ConfigSetup(userInput.userName)
@@ -117,7 +114,7 @@ func install() {
 		}
 
 		lib.Run(lib.Xargs(lib.ArchPkgsLoc, "pacman", "-Syu", "--noconfirm")...)
-		lib.FuncAs(userInput.userName, func(){lib.CopyYayCache(lib.HomeDir)})
+		lib.CopyYayCache(userInput.userName, lib.HomeDir)
 		lib.ExtraPackages(userInput.userName)
 		lib.ConfigSetup(userInput.userName)
 		lib.Run(lib.RunAs(userInput.userName, "systemctl", "--user", "import-environment")...)
@@ -145,11 +142,11 @@ func getUserInput() {
 		userInput.autoMount = lib.IsYes(lib.AskUser("Would you like to auto mount the partitions?\n[Y/n]: "))
 		if userInput.autoMount {
 			lib.Run("lsblk")
-			fmt.Println("Need the full path to the devices you want to mount")
-			fmt.Println("Bios boot is not supported yet so you'll need a separate partition")
+			log.Println("Need the full path to the devices you want to mount")
+			log.Println("Bios boot is not supported yet so you'll need a separate partition")
 			userInput.part.boot = lib.AskUser("Boot partition: ")
 			userInput.part.root = lib.AskUser("Root partition: ")
-			fmt.Println("set to root dev or just empty for btrfs subvol")
+			log.Println("set to root dev or just empty for btrfs subvol")
 			userInput.part.home = lib.AskUser("Home partition: ", true)
 			userInput.part.swap = lib.AskUser("Swap partition: ", true)
 		}
@@ -166,17 +163,15 @@ func main() {
 	go func() {
 		<-sigChan
 		cleanup()
-		fmt.Println("Program Was Closed")
+		log.Println("Program Was Closed")
 		os.Exit(1)
 	}()
 
 	if os.Geteuid() == 0 {
 		lib.SetupSudoersFile()
-		if !testInput {
-			getUserInput()
-		}
+		getUserInput()
 		install()
-		fmt.Println("\033[32mFinished Installation\033[0m")
+		log.Println("\033[32mFinished Installation\033[0m")
 	} else {
 		lib.CritError("\033[31mNeed to Run as Root\033[0m\n")
 		log.Fatal(recover())

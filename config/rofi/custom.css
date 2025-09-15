@@ -42,7 +42,8 @@
     highlight:     underline bold #ffffff;
 
     transparent: rgba(0,0,0,0);
-    font: "Source Code Pro 10";
+    font-family: "OpenDyslexicNerdFont"; 
+    font-size: 12px;
 }
 #window {
     location: center;

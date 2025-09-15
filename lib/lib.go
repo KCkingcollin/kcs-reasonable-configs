@@ -3,13 +3,16 @@ package lib
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"os/user"
 	fp "path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"syscall"
 
+	"github.com/go-git/go-git/v5"
 	"golang.org/x/term"
 )
 
@@ -28,7 +31,8 @@ var (
 )
 
 func CritError(err ...any) {
-	panic(fmt.Sprintln(append(err, "\033[31m\nCritical Failure\033[0m")...))
+	_, fileLoc, lineNum, _ := runtime.Caller(1)
+	panic(fmt.Sprintln(append(err, fmt.Sprintf("\033[31m\nCritical Failure On Line: %d In: %s\033[0m", lineNum, fp.Base(fileLoc)))...))
 }
 
 func AccountExists(userName string) bool {
@@ -49,9 +53,10 @@ func SetupSudoersFile() {
 	}
 }
 
-func CopyYayCache(homeLoc string) {
+func CopyYayCache(userName, homeLoc string) {
 	Mkdir(fp.Join(homeLoc, "/.cache/yay"))
-	Cp("/home/*/.cache/yay/*", fp.Join(homeLoc, "/.cache/yay/"), "-F noStderr noStdout")
+	Cp("/home/*/.cache/yay/*", fp.Join(homeLoc, "/.cache/yay/"), "-F noStdout")
+	Run("chown", "-R", userName+":"+userName, fp.Join(homeLoc, "/.cache/yay"))
 }
 
 func InChroot() bool {
@@ -77,7 +82,7 @@ func InChroot() bool {
 func AskUser(question string, options ...bool) string {
 	var userInput string
 	for {
-		fmt.Print(question)
+		log.Print(question)
 		if len(options) > 1 && options[1] {
 			input, _ := term.ReadPassword(0)
 			userInput = string(input)
@@ -103,7 +108,7 @@ func AskForPassword(account string) string {
 			fmt.Println("\nPasswords did not match.")
 		}
 	}
-	fmt.Println()
+	log.Println()
 	return pass
 }
 
@@ -116,33 +121,49 @@ func IsYes(input string) bool {
 }
 
 func CloneRepo(userName string) {
-	if HomeDir != "" {
-		if RepoLocation != "" && find(RepoLocation) {
-			if !find(fp.Join(HomeDir, RepoName)) {
-				Mv(RepoLocation, fp.Join(HomeDir, RepoName))
-			}
+	if HomeDir != "" && Find(HomeDir) {
+		if Find(RepoLocation) && !Find(fp.Join(HomeDir, RepoName)) {
+			Mv(RepoLocation, fp.Join(HomeDir, RepoName))
 		}
 		Cd(HomeDir)
 	} else {
 		Cd("/")
 	}
 
-	if find(RepoName) {
-		RepoLocation = fp.Join(Pwd(), RepoName)
-	} else if fp.Base(Pwd()) == RepoName {
-		RepoLocation = Pwd()
-	} else {
-		if !Run("git", "clone", "https://github.com/KCkingcollin/"+RepoName).Success {CritError()}
-		RepoLocation = fp.Join(Pwd(), RepoName)
+	if !Find(RepoLocation) {
+		if Find(RepoName) {
+			RepoLocation = fp.Join(Pwd(), RepoName)
+		} else if fp.Base(Pwd()) == RepoName {
+			RepoLocation = Pwd()
+		} else {
+			err := GitClone("https://github.com/KCkingcollin/"+RepoName)
+			if err != nil {
+				CritError(fmt.Errorf("failed to clone repository: %v", err))
+			}
+			RepoLocation = fp.Join(Pwd(), RepoName)
+		}
 	}
+
 	ArchPkgsLoc = fp.Join(RepoLocation, ArchPkgsFileName)
 	AurPkgsLoc = fp.Join(RepoLocation, AurPkgsFileName)
 
 	Cd(RepoLocation)
 
-	if HomeDir != "" && fp.Base(Pwd()) == RepoName {
+	if fp.Dir(RepoLocation) == HomeDir && userName != "" {
 		Run("chown", "-R", userName+":"+userName, ".")
 	}
+}
+
+// a simple cloning helper function, will work as if you used "git clone" with only the url as the arg
+func GitClone(url string) error {
+	clonePath := fp.Join(Pwd(), strings.TrimSuffix(fp.Base(url), ".git") )
+
+	log.Println("Cloning repository...")
+	_, err := git.PlainClone(clonePath, false, &git.CloneOptions{
+		URL:      url,
+		Progress: log.Writer(),
+	})
+	return err
 }
 
 // uncomments a line containing all the phrases from a file that uses the prefix for commenting
@@ -201,9 +222,9 @@ func AddUserToSudo(username string) {
 	}
 }
 
-func CreateAccount(userName, userPass string) {
+func CreateAccount(userName, userPW string) {
 	Run("useradd", "-m", userName)
-	if !RunI(userPass+"\n"+userPass, "passwd", userName).Success {CritError()}
+	if !RunI(userPW+"\n"+userPW, "passwd", userName).Success {CritError()}
 	AddUserToSudo(userName)
 	HomeDir = GetHomeDir(userName)
 }
@@ -224,6 +245,7 @@ func RemoveSudoUser() {
 	}
 }
 
+// finds all block devices known to /proc/mounts
 func FindBlockDevices() []string {
 	var mounts []string
 
@@ -279,17 +301,17 @@ func CheckAndFixFstab() {
 func InstallyayPackages(userName string) {
 	Run("chown", "-R", userName+":"+userName, HomeDir)
 	if !Run("pacman", "-Q", "|", "grep", "-q", `"yay"`).Success {
-		if !find("yay-bin") {
-			if !Run(RunAs(userName, "git", "clone", "https://aur.archlinux.org/yay-bin.git")...).Success {CritError()}
+		if !Find("yay-bin") {
+			FuncAs(userName, func(){_ = GitClone("https://aur.archlinux.org/yay-bin.git")})
 		}
 		Cd("yay-bin")
 		Run(RunAs(userName, "makepkg", "-si", "--noconfirm")...)
 		Cd("..")
 	}
-	Run(Xargs(AurPkgsLoc, RunAs(userName, "yay", "-Sy", "--noconfirm")...)...)
+	Run(Xargs(AurPkgsLoc, RunAs(userName, "yay", "-Sy", "--noconfirm", "-F noStdout")...)...)
 }
 
-func ChrootSetup(userName, rootPass, userPass, hostName string) {
+func ChrootSetup(userName, rootPass, userPW, hostName string) {
 	Run("genfstab", "-U", "/", ">>", "/etc/fstab")
 	CheckAndFixFstab()
 
@@ -313,13 +335,17 @@ func ChrootSetup(userName, rootPass, userPass, hostName string) {
     if !Run("grub-install", "--target=x86_64-efi", "--efi-directory=/boot/efi", "--removable", "--recheck").Success {CritError()}
     if !Run("grub-mkconfig", "-o", "/boot/grub/grub.cfg").Success {CritError()}
 
-	CreateAccount(userName, userPass)
+	if AccountExists(userName) {
+		GetAccount(userName)
+	} else {
+		CreateAccount(userName, userPW)
+	}
 
 	MkFileWithText(hostName, "/etc/hostname")
 
 	Run("chown", "-R", userName+":"+userName, HomeDir)
 
-	fmt.Println("\033[32m\nChroot Setup Done\033[0m")
+	log.Println("\033[32m\nChroot Setup Done\033[0m")
 }
 
 func ExtraPackages(userName string) {
@@ -329,20 +355,24 @@ func ExtraPackages(userName string) {
 
 	InstallyayPackages(userName)
 
-	if !find("castle-shell") {
-		if !Run("git", "clone", "https://github.com/KCkingcollin/castle-shell").Success {CritError()}
+	if !Find("castle-shell") {
+		var err error
+		FuncAs(userName, func(){err = GitClone("https://github.com/KCkingcollin/castle-shell")})
+		if err != nil {
+			CritError("Failed to clone castle shell repo")
+		}
 	}
 	Cd("castle-shell/color-checker")
 	Run("go", "build", "-o", "/usr/bin/color-checker")
 	Cd("../..")
 
-	Run("flatpak", "override", "--filesystem=\"/home/userName\"/.themes")
-	Run("flatpak", "override", "--filesystem=\"/home/userName\"/.icons")
-	Run("flatpak", "override", "--filesystem=\"/home/userName\"/.gtkrc-2.0")
+	Run("flatpak", "override", "--filesystem="+fp.Join(HomeDir, ".themes"))
+	Run("flatpak", "override", "--filesystem="+fp.Join(HomeDir, ".icons"))
+	Run("flatpak", "override", "--filesystem="+fp.Join(HomeDir, ".gtkrc-2.0"))
 	Run("flatpak", "override", "--env=GTK_THEME=Adwaita-dark")
 	Run("flatpak", "override", "--env=ICON_THEME=Adwaita-dark")
 
-	fmt.Println("\033[32m\nExtra Packages Installed\033[0m")
+	log.Println("\033[32m\nExtra Packages Installed\033[0m")
 }
 
 func ConfigSetup(userName string) {
@@ -350,9 +380,12 @@ func ConfigSetup(userName string) {
 	defer RemoveSudoUser()
 	CloneRepo(userName)
 
+	Mv(fp.Join(HomeDir, "/.config/gtk-2.0"), fp.Join(HomeDir, "/.config/gtk-2.0.bak")) 
+	Mv(fp.Join(HomeDir, "/.config/gtk-3.0"), fp.Join(HomeDir, "/.config/gtk-3.0.bak")) 
+	Mv(fp.Join(HomeDir, "/.config/gtk-4.0"), fp.Join(HomeDir, "/.config/gtk-4.0.bak")) 
     Mv(fp.Join(HomeDir, "/.config/nvim"), fp.Join(HomeDir, "/.config/nvim.bak")) 
     Mv(fp.Join(HomeDir, "/.config/fastfetch"), fp.Join(HomeDir, "/.config/fastfetch.bak")) 
-    Mv(fp.Join(HomeDir, "/.config/kitty"), fp.Join(HomeDir, "/.config/foot.bak")) 
+    Mv(fp.Join(HomeDir, "/.config/kitty"), fp.Join(HomeDir, "/.config/kitty.bak")) 
     Mv(fp.Join(HomeDir, "/.config/hypr"), fp.Join(HomeDir, "/.config/hypr.bak")) 
     Mv(fp.Join(HomeDir, "/.config/waybar"), fp.Join(HomeDir, "/.config/waybar.bak")) 
     Mv(fp.Join(HomeDir, "/.config/swaync"), fp.Join(HomeDir, "/.config/swaync.bak")) 
@@ -363,9 +396,12 @@ func ConfigSetup(userName string) {
     Mv(fp.Join(HomeDir, "/.icons"), fp.Join(HomeDir, "/.icons.bak")) 
     Mv(fp.Join(HomeDir, "/.gtkrc-2.0"), fp.Join(HomeDir, "/.gtkrc-2.0.bak")) 
 
+    Mv("/root/.config/gtk-2.0", "/root/.config/gtk-2.0.bak")
+    Mv("/root/.config/gtk-3.0", "/root/.config/gtk-3.0.bak")
+    Mv("/root/.config/gtk-4.0", "/root/.config/gtk-4.0.bak")
     Mv("/root/.config/nvim", "/root/.config/nvim.bak") 
     Mv("/root/.config/fastfetch", "/root/.config/fastfetch.bak") 
-    Mv("/root/.config/kitty", "/root/.config/foot.bak") 
+    Mv("/root/.config/kitty", "/root/.config/kitty.bak") 
     Mv("/root/.config/hypr", "/root/.config/hypr.bak") 
     Mv("/root/.config/waybar", "/root/.config/waybar.bak") 
     Mv("/root/.config/swaync", "/root/.config/swaync.bak") 
@@ -396,7 +432,7 @@ func ConfigSetup(userName string) {
 	Run("chsh", "-s", "/bin/zsh", userName)
 	Run("chsh", "-s", "/bin/zsh", "root")
 
-	if !find(HomeDir+"/Pictures/background.jpg") {
+	if !Find(HomeDir+"/Pictures/background.jpg") {
 		FuncAs(userName, func(){Mkdir(fp.Join(HomeDir, "/Pictures"))})
 		Cp("background.jpg", HomeDir+"/Pictures/background.jpg")
 	}
@@ -404,12 +440,13 @@ func ConfigSetup(userName string) {
 	Run("chown", "-R", userName+":"+userName, HomeDir)
 	Run("chown", "-R", "root:root", "/root")
 
+	Run("fc-cache", "-rv")
 	Run(RunAs(userName, "gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", "\"Adwaita-dark\"")...)
 	Run(RunAs(userName, "gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "\"prefer-dark\"")...)
 	Run("gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", "\"Adwaita-dark\"")
 	Run("gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "\"prefer-dark\"")
 
-	Run("rate-mirrors", "--allow-root", "--save", "/etc/pacman.d/mirrorlist", "arch")
+	Run("rate-mirrors", "--allow-root", "--save", "/etc/pacman.d/mirrorlist", "arch", "-F noStdout")
 
 	MkFileWithText(
 		"[User]\n"+
@@ -420,6 +457,5 @@ func ConfigSetup(userName string) {
 		"/var/lib/AccountsService/users/"+userName, 
 	)
 
-
-	fmt.Println("\033[32m\nConfigs Installed\033[0m")
+	log.Println("\033[32m\nConfigs Installed\033[0m")
 }

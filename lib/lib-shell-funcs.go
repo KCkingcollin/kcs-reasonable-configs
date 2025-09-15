@@ -5,11 +5,14 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"os/user"
 	fp "path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -30,62 +33,146 @@ type CmdInfo struct {
 	Error 		error
 }
 
+func getUserShell() string {
+    shell := os.Getenv("SHELL")
+
+	if p, err := exec.LookPath(shell); err == nil {
+		return p
+	}
+	if p, err := exec.LookPath("bash"); err == nil {
+		return p
+	}
+	if p, err := exec.LookPath("zsh"); err == nil {
+		return p
+	}
+	if p, err := exec.LookPath("sh"); err == nil {
+		return p
+	}
+
+	CritError("We kinda need a shell to run shell commands...")
+	return ""
+}
+
 // Run bash command
+//
 // Use -F followed by space separated flags at the end of the command
-// flag 1: noStdout
-// flag 2: noStderr
-// flag 3: enableStdin
+//	flag 1: noStdout	 <-- disables sending output to the terminal, will still be available with .Output
+//	flag 2: enableStdin  <-- enables stdin, can break 
+// 	flag 3: trimSpace 	 <-- aggressive: trim *all* leading/trailing whitespace (rarely what you want)
+// 	flag 4: noTrimNL 	 <-- do not strip trailing '\n' 
+// 	flag 5: noShell 	 <-- do not use a shell
 func Run(command ...string) CmdInfo {
 	runCmdLock.Lock()
 	defer runCmdLock.Unlock()
 
-	var flags string
+	var stdoutBuffer bytes.Buffer
+	var wg sync.WaitGroup
+	var flags []string
+	var has = slices.Contains[[]string]
+
 	if strings.Contains(command[len(command)-1], "-F") {
-		flags = command[len(command)-1]
+		flags = strings.Fields(command[len(command)-1])[1:]
 		command = command[:len(command)-1]
 	}
 
-	if !find("/bin/bash") {
-		CritError("We kinda need bash for this")
+	cmdline := strings.Join(command, " ")
+
+	runningCmd := strings.Fields(cmdline)[0]
+	if _, err := exec.LookPath(runningCmd); err != nil {
+		CritError(fmt.Errorf("error: Command %s does not exist", runningCmd))
 	}
 
-	cmd := exec.Command("bash", "-c", strings.Join(command, " "))
-
-	if strings.Contains(flags, "enableStdin") {
-		cmd.Stdin = os.Stdin
+	var cmd *exec.Cmd
+	if !has(flags, "noShell") {
+		shell := getUserShell()
+		cmd = exec.Command(shell, "-c", cmdline)
+	} else {
+		cmd = exec.Command(command[0], command[1:]...)
 	}
 
-	// something about pty freezes in an environment without a bin folder
+	cmd.Env = os.Environ()
+
 	ptmx, err := pty.Start(cmd)
 	if err != nil {
-		return CmdInfo{false, 1, "", fmt.Errorf("failed to start pty: %v", err)}
+		CritError(fmt.Errorf("failed to start pty: %v", err))
 	}
-	defer func() {_ = ptmx.Close()}()
+
+	cmdSigChan := make(chan os.Signal, 1)
+	signal.Notify(cmdSigChan, syscall.SIGINT, syscall.SIGTERM)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for sig := range cmdSigChan {
+			_ = cmd.Process.Signal(sig)
+		}
+	}()
+
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGWINCH)
 
 	if term.IsTerminal(int(os.Stdin.Fd())) {
 		_ = pty.InheritSize(os.Stdin, ptmx)
+
+		go func() {
+			for range ch {
+				_ = pty.InheritSize(os.Stdin, ptmx)
+			}
+		}()
 	}
 
-	var stdoutBuffer, stderrBuffer bytes.Buffer
+	if has(flags, "enableStdin") && term.IsTerminal(int(os.Stdin.Fd())) {
+		oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+		if err != nil {
+			CritError(err)
+		}
+		defer func() {_ = term.Restore(int(os.Stdin.Fd()), oldState)}()
 
-	if strings.Contains(flags, "noStderr") {
-		cmd.Stderr = &stderrBuffer
+		go func() {
+			_, _ = io.Copy(ptmx, os.Stdin)
+		}()
+	}
+
+	wg.Add(1)
+	if has(flags, "noStdout") {
+		go func () { 
+			defer wg.Done()
+			_, _ = io.Copy(&stdoutBuffer, ptmx) 
+		}()
 	} else {
-		cmd.Stderr = io.MultiWriter(os.Stderr, &stderrBuffer)
+		go func () {
+			defer wg.Done()
+			_, _ = io.Copy(io.MultiWriter(log.Writer(), &stdoutBuffer), ptmx)
+		}()
 	}
 
-	if strings.Contains(flags, "noStdout") {
-		go func () { _, _ = io.Copy(&stdoutBuffer, ptmx) }()
-	} else {
-		go func () { _, _ = io.Copy(io.MultiWriter(os.Stdout, &stdoutBuffer), ptmx) }()
-	}
 
 	err = cmd.Wait()
+	if err := ptmx.Close(); err != nil {CritError(err)}
+	signal.Stop(cmdSigChan)
+	close(cmdSigChan)
+	signal.Stop(ch)
+	close(ch)
+	wg.Wait()
+
+	out := stdoutBuffer.String()
+	out = strings.ReplaceAll(out, "\r\n", "\n")
+	if !has(flags, "noTrimNL") {
+		out = strings.TrimRight(out, "\n")
+	}
+	if has(flags, "trimSpace") {
+		out = strings.TrimSpace(out)
+	}
+
+	var cerr error
+	if err != nil {
+		cerr = fmt.Errorf("%w\n%s", err, out)
+	}
+
 	return CmdInfo{
 		Success: 	cmd.ProcessState.Success(),
 		ExitCode: 	cmd.ProcessState.ExitCode(),
-		Output:   	strings.ReplaceAll(strings.TrimSpace(stdoutBuffer.String()), "\r\n", "\n"),
-		Error:    	fmt.Errorf("%v%s", err, stderrBuffer.String()),
+		Output:   	out,
+		Error:    	cerr,
 	}
 }
 
@@ -175,36 +262,43 @@ func RunI(input string, command ...string) CmdInfo {
 	return Run(append(output, command...)...)
 }
 
-// Sets the current user, and returns a function to set it back and a error
+// sets the egid, euid, and groups to the user's, runs the function, then returns them back to the previous user's
 func FuncAs(username string, fn func()) {
-	u, err := user.Lookup(username)
-	if err != nil {
-		CritError(err)
-	}
+    u, err := user.Lookup(username)
+    if err != nil {
+        CritError(err)
+    }
 
-	uid, _ := strconv.Atoi(u.Uid)
-	gid, _ := strconv.Atoi(u.Gid)
+    uid, _ := strconv.Atoi(u.Uid)
+    gid, _ := strconv.Atoi(u.Gid)
+
+    groups, _ := u.GroupIds()
+    gids := make([]int, len(groups))
+    for i, g := range groups {
+        gids[i], _ = strconv.Atoi(g)
+    }
 
 	origUID := syscall.Geteuid()
 	origGID := syscall.Getegid()
+	origGroups, _ := syscall.Getgroups()
 
-	if err := syscall.Setegid(gid); err != nil {
-		CritError(err)
-	}
-	if err := syscall.Seteuid(uid); err != nil {
-		CritError(err)
-	}
+    if err := syscall.Setgroups(gids); err != nil {
+        CritError(err)
+    }
+    if err := syscall.Setegid(gid); err != nil {
+        CritError(err)
+    }
+    if err := syscall.Seteuid(uid); err != nil {
+        CritError(err)
+    }
 
-	defer func() {
-		if err := syscall.Seteuid(origUID); err != nil {
-			CritError(err)
-		}
-		if err := syscall.Setegid(origGID); err != nil {
-			CritError(err)
-		}
-	}()
+    defer func() {
+        _ = syscall.Seteuid(origUID)
+        _ = syscall.Setegid(origGID)
+		_ = syscall.Setgroups(origGroups)
+    }()
 
-	fn()
+    fn()
 }
 
 // Appends sudo -S -u username to the beginning of the command
@@ -233,7 +327,7 @@ func Cd(dir string) {
 }
 
 func Mv(loc1, loc2 string) CmdInfo {
-	return Run("mv", loc1, loc2, "-F noStdout noStderr")
+	return Run("mv", loc1, loc2, "-F noStdout")
 }
 
 func Pwd() string {
@@ -245,7 +339,7 @@ func Pwd() string {
 }
 
 // the equivalent of -e in a bash if statement
-func find(filename string) bool {
+func Find(filename string) bool {
 	_, err := os.Stat(filename)
 	return !os.IsNotExist(err)
 }
@@ -298,39 +392,12 @@ func Cp(input ...string) CmdInfo {
 	return Run(append([]string{"cp", "-rfp"}, input...)...)
 }
 
-func IsMounted(path string) bool {
-	file, err := os.Open("/proc/mounts")
-	if err != nil {
-		fmt.Fprintln(os.Stderr, fmt.Errorf("failed to open /proc/mounts: %w", err))
-		return false
-	}
-	defer func() {_ = file.Close()}()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.Fields(line)
-		if len(parts) >= 2 {
-			if parts[0] == path || parts[1] == path {
-				return true
-			}
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, fmt.Errorf("error reading /proc/mounts: %w", err))
-		return false
-	}
-
-	return false
-}
-
 func Mount(source, target, fstype, options string) {
     var flags uintptr
     fi, err := os.Stat(source)
     if err == nil && !fi.IsDir() && strings.HasPrefix(source, "/dev/") {
         if fstype == "" {
-            out := Run("blkid", "-o", "value", "-s", "TYPE", source).Output
+            out := Run("blkid", "-o", "value", "-s", "TYPE", source, "-F noStdout").Output
             fstype = strings.TrimSpace(out)
             if fstype == "" {
                 CritError(fmt.Errorf("could not detect fstype for %s", source))
@@ -393,11 +460,94 @@ func Mount(source, target, fstype, options string) {
     }
 }
 
+// returns true if the device is mounted
+func IsMounted(path string) bool {
+	path = fp.Clean(path)
+	file, err := os.Open("/proc/mounts")
+	if err != nil {
+		CritError(fmt.Errorf("failed to open /proc/mounts: %w", err))
+	}
+	defer func() {_ = file.Close()}()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.Fields(line)
+		if len(parts) >= 2 {
+			if parts[0] == path || parts[1] == path {
+				return true
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		CritError(fmt.Errorf("error reading /proc/mounts: %w", err))
+	}
+
+	return false
+}
+
+// GetMountPoint returns the mount point for a given path or the path if it is a mount point
+//
+// returns a error only when the path is not found anywhere in /proc/mounts
+func GetMountPoint(path string) (string, error) {
+	path = fp.Clean(path)
+
+	file, err := os.Open("/proc/mounts")
+	if err != nil {
+		CritError(fmt.Errorf("failed to open /proc/mounts: %w", err))
+	}
+	defer func() {_ = file.Close()}()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.Fields(line)
+		if len(parts) > 1 {
+			if parts[0] == path {
+				return parts[1], nil // device -> mountpoint
+			}
+			if parts[1] == path {
+				return parts[1], nil // mountpoint -> itself
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		CritError(fmt.Errorf("error reading /proc/mounts: %w", err))
+	}
+
+	return "", fmt.Errorf("error: path is not in /proc/mounts")
+}
+
+// unmount a partition
+//
+// can optionally use a wild card at the end of the string (*) and a best effort attempt at unmounting all the discovered files/dirs will be made
 func Umount(target string) {
-	if IsMounted(target) {
-		if err := syscall.Unmount(target, syscall.MNT_DETACH); err != nil {
-			if err := syscall.Unmount(target, syscall.MNT_FORCE); err != nil {
-				CritError(fmt.Printf("Umount %s failed: %v\n", target, err))
+	var items []string
+	if strings.HasSuffix(target, "*") {
+		dir := fp.Dir(target)
+		prefix := strings.TrimSuffix(fp.Base(target), "*")
+
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			CritError(err)
+		}
+
+		for _, e := range entries {
+			if strings.HasPrefix(e.Name(), prefix) {
+				items = append(items, fp.Join(dir, e.Name()))
+			}
+		}
+	} else {
+		items = append(items, target)
+	}
+	for _, item := range items {
+		if mountPoint, err := GetMountPoint(item); err == nil {
+			if err := syscall.Unmount(mountPoint, syscall.MNT_DETACH); err != nil {
+				if err := syscall.Unmount(mountPoint, syscall.MNT_FORCE); err != nil {
+					CritError(fmt.Sprintf("Umount %s failed: %v\n", item, err))
+				}
 			}
 		}
 	}
@@ -412,7 +562,7 @@ func Mkdir(dir string, perms ...os.FileMode) {
 func Cat(path string) string {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		CritError(err)
+		return  ""
 	}
 	return string(data)
 }
