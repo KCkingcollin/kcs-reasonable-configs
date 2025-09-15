@@ -1,25 +1,29 @@
 FROM archlinux:latest
 
-COPY etc/pacman.conf /etc/
-
 WORKDIR /kcs-reasonable-configs
 
 COPY . .
+COPY ./config/fontconfig/fonts.conf /root/.config/fontconfig/fonts.conf
+COPY ./config/fontconfig/fonts.conf /home/arch/.config/fontconfig/fonts.conf
+COPY .zshrc /root/
+COPY .zshrc /home/arch/
+COPY ./etc/pacman.conf /etc/pacman.conf
+COPY ./etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist
 
 RUN pacman -Scc --noconfirm && \
     useradd -m arch && \
     printf "arch\narch\n" | passwd arch && \
-    echo "arch	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
     pacman-key --init && \
     pacman-key --populate archlinux && \
     pacman -Sy --noconfirm archlinux-keyring && \
     pacman -Suw --noconfirm $(cat "./arch-packages") && \
     pacman -S --noconfirm \ 
-    git base-devel btrfs-progs zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch && \
-    chown -R arch:arch .;
-
-COPY .zshrc /root/
-COPY .zshrc /home/arch/
+    linux-lts fontconfig otf-opendyslexic-nerd dosfstools parted git base-devel go btrfs-progs zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch arch-install-scripts && \
+    echo "arch	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+    echo "root	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+    fc-cache -rv && \
+    chown -R arch:arch . && \
+    go build .;
 
 USER arch
 
