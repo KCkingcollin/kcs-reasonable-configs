@@ -18,12 +18,12 @@ RUN pacman -Scc --noconfirm && \
     pacman -Sy --noconfirm archlinux-keyring && \
     pacman -Suw --noconfirm $(cat "./arch-packages") && \
     pacman -S --noconfirm \ 
-    linux-lts fontconfig otf-opendyslexic-nerd dosfstools parted git base-devel go btrfs-progs zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch arch-install-scripts && \
+    linux-lts make libvirt fontconfig otf-opendyslexic-nerd dosfstools parted git base-devel go btrfs-progs zsh zsh-autosuggestions zsh-syntax-highlighting zsh-history-substring-search fastfetch arch-install-scripts && \
     echo "arch	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
     echo "root	ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
     fc-cache -rv && \
     chown -R arch:arch . && \
-    go build .;
+    make;
 
 USER arch
 

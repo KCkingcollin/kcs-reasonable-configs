@@ -1,17 +1,20 @@
 package lib
 
 import (
+	at "auto-testing/lib"
 	"bytes"
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
+	"math/big"
 	"os"
 	fp "path/filepath"
 	"strings"
 	"sync"
 	"testing"
+	. "unix-shell"
 )
 
 var logBuffer safeBuf
@@ -55,6 +58,39 @@ func printfLiteral(s string) string {
     return fmt.Sprintf("printf %%s %s", quoted)
 }
 
+func randInt(max int64) int64 {
+	n, err := rand.Int(rand.Reader, big.NewInt(max))
+	if err != nil {
+		panic(err)
+	}
+	return n.Int64()
+}
+
+func randomString() string {
+	n := int(randInt(64) + 1)
+
+	var b []rune
+	for len(b) < n {
+		x := randInt(0x110000)
+		r := rune(x)
+
+		switch {
+		case r == 0 || r == '\x00':
+			continue
+		case r == '%':
+			continue
+		case r < 0x20 && r != '\n' && r != '\t':
+			continue
+		case r > 0x10FFFF:
+			continue
+		default:
+			b = append(b, r)
+		}
+	}
+
+	return string(b)
+}
+
 func TestRun(t *testing.T) {
 	// Curated nasties first.
 	cases := []string{
@@ -72,27 +108,13 @@ func TestRun(t *testing.T) {
 		`%s %d %x not format, just text`,       // printf-looking
 	}
 
-	r := rand.New(rand.NewSource(0xC0FFEE))
 	const extra = 1000
 	for range extra {
-		n := 1 + r.Intn(64)
-		b := make([]rune, 0, n)
-		for len(b) < n {
-			x := r.Intn(0x110000)
-			switch {
-			case x == 0 || x == '\x00':
-				continue
-			case x < 0x20 && x != '\n' && x != '\t':
-				continue
-			default:
-				b = append(b, rune(x))
-			}
-		}
-		cases = append(cases, string(b))
+		cases = append(cases, randomString())
 	}
 
 	for idx, expect := range cases {
-		out := Run(printfLiteral(expect), "-F noStdout noTrimNL")
+		out := RunF(RunFlags{NoStdout: true, NoTrimNL: true}, printfLiteral(expect))
 		if !out.Success {
 			t.Fatalf("case %d: printf returned non-zero: exit=%d err=%v\ncmdout:\n%s",
 				idx, out.ExitCode, out.Error, out.Output)
@@ -109,28 +131,27 @@ func TestFindBlockDevices(t *testing.T) {
 	tempSwapFile := "./tempSwap.raw"
 	if out := Run(`fallocate -l 1G`, tempSwapFile); !out.Success {t.Fatal(out.Error, out.Output)}
 
-	if out := Run(`parted -s `+tempSwapFile+` mklabel gpt`, "-F noStdout"); !out.Success {t.Fatal(out.Error, out.Output)}
-	if out := Run(
+	if out := RunS(`parted -s `+tempSwapFile+` mklabel gpt`); !out.Success {t.Fatal(out.Error, out.Output)}
+	if out := RunS(
 		`parted -s `+tempSwapFile+` mkpart primary linux-swap 1MiB 100%`,
-		"-F noStdout",
 	); !out.Success {t.Fatal(out.Error, out.Output)}
 
-	diskNum := MountRawDisk(tempSwapFile)
-	if out := Run(`mkswap`, LoopDevices[diskNum], "-F noStdout"); !out.Success {t.Fatal(out.Error, out.Output)}
-	if out := Run("swapon", LoopDevices[diskNum], "-F noStdout"); !out.Success {t.Fatal(out.Error, out.Output)}
+	diskNum := at.MountRawDisk(tempSwapFile)
+	if out := RunS(`mkswap`, at.LoopDevices[diskNum]); !out.Success {t.Fatal(out.Error, out.Output)}
+	if out := RunS("swapon", at.LoopDevices[diskNum]); !out.Success {t.Fatal(out.Error, out.Output)}
 	defer func() {
-		UmountRawDisk(diskNum)
+		at.UmountRawDisk(diskNum)
 		if err := Rm(tempSwapFile); err != nil {t.Fatal(err)}
 	}()
 
 	expected := strings.Split(
-		Run(`cat /proc/mounts | grep "^/dev/" | sed 's/^\([^ ]*\).*/\1/'`, "-F noStdout").Output,
+		RunS(`cat /proc/mounts | grep "^/dev/" | sed 's/^\([^ ]*\).*/\1/'`).Output,
 		"\n",
 	)
 	expected = append(
 		expected,
 		strings.Split(
-			Run(`cat /proc/swaps | grep "^/dev/" | sed 's/^\([^ ]*\).*/\1/'`, "-F noStdout").Output,
+			RunS(`cat /proc/swaps | grep "^/dev/" | sed 's/^\([^ ]*\).*/\1/'`).Output,
 			"\n",
 		)...,
 	)
@@ -159,7 +180,7 @@ func TestCheckAndFixFstab(t *testing.T) {
 
 	Mkdir(fp.Join(tempDir, "/etc"))
 	Run("genfstab", "-U", "/", ">", fp.Join(tempDir, "/etc/fstab"))
-	Run("pacstrap", "-c", tempDir, "util-linux", "bash", "-F noStdout")
+	RunS("pacstrap", "-c", tempDir, "util-linux", "bash")
 
 	escape := Chroot(tempDir)
 	defer escape()
@@ -183,7 +204,7 @@ func TestMain(m *testing.M) {
 		output = &logBuffer
 	}
 	log.SetOutput(output)
-	MainRootFD = GetRootFD()
+	at.MainRootFD = GetRootFD()
 	exitCode := m.Run()
 	os.Exit(exitCode)
 }

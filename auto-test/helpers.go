@@ -1,12 +1,13 @@
 package main
 
 import (
-	"Install/lib"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	sh "unix-shell"
 
 	"github.com/containers/podman/v5/pkg/bindings"
 	"libvirt.org/go/libvirt"
@@ -92,7 +93,7 @@ func attachDiskAndBootVM(diskPath string) error {
 	}
 	defer func(){_ = dom.Free()}()
 
-	lib.Run("virsh attach-disk", vmName, diskPath, "vda --persistent --subdriver raw", "-F noStdout")
+	sh.RunS("virsh attach-disk", vmName, diskPath, "vda --persistent --subdriver raw")
 
 	return dom.Create()
 }
@@ -156,37 +157,33 @@ func defineOrRedefineNetwork(conn *libvirt.Connect, name, path string) error {
 // automatically sets up and starts the container environment and runs the shellFn in a interactive environment
 // 
 // optionally add extra flags for the Run function
-func runContainer(shellFn string, flags ...string) error {
+func runContainer(shellFn string) error {
 	const testCon = "testContainer"
-	out := lib.Run(
+	out := sh.RunS(
 		"podman", "run", "--replace", "-dit", "--name", testCon, "--privileged",
 		"-v", "/tmp/src.tar:/tmp/src.tar:ro", 
 		"-v", archTestDisk+":/images/arch-test.raw",
 		"-v", "/dev/:/dev/",
 		imageTag,
-		"-F noShell noStdout",
 	)
 	if out.Error != nil {
 		return out.Error
 	}
-	defer lib.Run("podman kill", testCon, "-F noStdout")
+	defer sh.RunS("podman kill", testCon)
 
-	out = lib.Run(
+	out = sh.RunS(
 		"podman", "exec", testCon,
 		"tar", "-C", ".", "-xf", "/tmp/src.tar",
-		"-F noShell noStdout",
 	)
 	if out.Error != nil {
 		return out.Error
 	}
 
-	out = lib.Run(
+	out = sh.RunF(
+		sh.RunFlags{NoShell: true, EnableStdin: true},
 		append(
 			[]string{"podman", "exec", "-it", testCon},
-			append(
-				strings.Fields(shellFn), 
-				fmt.Sprintf("-F noShell enableStdin %s", strings.Join(flags, " ")),
-			)...
+			strings.Fields(shellFn)...
 		)...
 	)
 	return out.Error
@@ -194,11 +191,11 @@ func runContainer(shellFn string, flags ...string) error {
 
 // size is a int plus a type suffix like this: 50G
 func recreateSparseFile(path string, size string) error {
-	lib.Mkdir(filepath.Dir(path))
-	if err := lib.Run("fallocate -l ", size, path).Error; err != nil {return err}
-	for !lib.Run("wipefs", "-a", path, "-F noStdout").Success {}
+	sh.Mkdir(filepath.Dir(path))
+	if err := sh.Run("fallocate -l ", size, path).Error; err != nil {return err}
+	for !sh.RunS("wipefs", "-a", path).Success {}
 	for _, err := os.Stat(path); err != nil; _, err = os.Stat(path) {
-		if err == os.ErrNotExist {return err}
+		if errors.Is(err, os.ErrNotExist) {return err}
 	}
 	return nil
 }

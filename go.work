@@ -1,6 +1,7 @@
-go 1.24.6
+go 1.25.1
 
 use (
-	.
-	./testing
+	./Install
+	./auto-test
+	./shell-funcs
 )

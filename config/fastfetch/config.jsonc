@@ -3,8 +3,9 @@
   "logo": {
       "type": "auto",       
       "source": "arch",     
-      "width": 100,          
-      "height": 60,         
+      // for some reason they do not keep the width and height of things consistent across versions
+      // "width": 100,          
+      // "height": 60,         
       "padding": {
           "top": 4,         
           "left": 4,        

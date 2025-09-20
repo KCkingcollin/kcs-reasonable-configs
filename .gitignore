@@ -1,4 +1,4 @@
 *.qcow2
 .cache
 *.tar
-*/bin/*
+bin/

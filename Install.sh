@@ -7,4 +7,5 @@ if [ -d "kcs-reasonable-configs" ]; then
     cd kcs-reasonable-configs || return 1
 fi
 
-go run Install.go
+make
+./bin/Install

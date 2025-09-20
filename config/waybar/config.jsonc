@@ -7,7 +7,8 @@
     "spacing": 0,// Gaps between modules (4px)
     // Choose the order of the modules
     "modules-left": [
-        "hyprland/language",
+        // "hyprland/language",
+        "custom/menu",
         //"temperature",
         "hyprland/workspaces",
         "custom/playerprev",
@@ -34,6 +35,11 @@
     "hyprland/language": {
         "format": "{short} {variant}",
         "on-click": "hyprctl switchxkblayout at-translated-set-2-keyboard next",
+    },
+
+    "custom/menu": {
+        "format": "𓃑",
+        "on-click": "rofi -show",
     },
 
     "bluetooth": {

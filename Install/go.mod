@@ -3,7 +3,6 @@ module Install
 go 1.24.6
 
 require (
-	github.com/creack/pty v1.1.24
 	github.com/go-git/go-git/v5 v5.16.2
 	golang.org/x/term v0.35.0
 )

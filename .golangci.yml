@@ -1,0 +1,20 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - bodyclose
+    - copyloopvar
+    - contextcheck
+    - errorlint
+    - gocritic
+    - rowserrcheck
+    - sqlclosecheck
+    - unparam
+    - prealloc
+    - nilerr
+    - nilnil

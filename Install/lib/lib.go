@@ -1,6 +1,8 @@
 package lib
 
 import (
+	//nolint:staticcheck
+	. "unix-shell"
 	"bufio"
 	"fmt"
 	"log"
@@ -8,7 +10,6 @@ import (
 	"os/user"
 	fp "path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
 	"syscall"
 
@@ -30,11 +31,6 @@ var (
 	AurPkgsLoc 		string
 )
 
-func CritError(err ...any) {
-	_, fileLoc, lineNum, _ := runtime.Caller(1)
-	panic(fmt.Sprintln(append(err, fmt.Sprintf("\033[31m\nCritical Failure On Line: %d In: %s\033[0m", lineNum, fp.Base(fileLoc)))...))
-}
-
 func AccountExists(userName string) bool {
 	_, err := user.Lookup(userName)
 	return err == nil
@@ -55,7 +51,7 @@ func SetupSudoersFile() {
 
 func CopyYayCache(userName, homeLoc string) {
 	Mkdir(fp.Join(homeLoc, "/.cache/yay"))
-	Cp("/home/*/.cache/yay/*", fp.Join(homeLoc, "/.cache/yay/"), "-F noStdout")
+	Cp("/home/*/.cache/yay/*", fp.Join(homeLoc, "/.cache/yay/"))
 	Run("chown", "-R", userName+":"+userName, fp.Join(homeLoc, "/.cache/yay"))
 }
 
@@ -126,19 +122,20 @@ func CloneRepo(userName string) {
 			Mv(RepoLocation, fp.Join(HomeDir, RepoName))
 		}
 		Cd(HomeDir)
-	} else {
-		Cd("/")
 	}
 
 	if !Find(RepoLocation) {
-		if Find(RepoName) {
+		switch {
+		case Find(RepoName):
 			RepoLocation = fp.Join(Pwd(), RepoName)
-		} else if fp.Base(Pwd()) == RepoName {
+		case fp.Base(Pwd()) == RepoName:
 			RepoLocation = Pwd()
-		} else {
+		case fp.Base(fp.Dir(Pwd())) == RepoName:
+			RepoLocation = fp.Dir(Pwd())
+		default:
 			err := GitClone("https://github.com/KCkingcollin/"+RepoName)
 			if err != nil {
-				CritError(fmt.Errorf("failed to clone repository: %v", err))
+				CritError(fmt.Errorf("failed to clone repository: %w", err))
 			}
 			RepoLocation = fp.Join(Pwd(), RepoName)
 		}
@@ -166,13 +163,13 @@ func GitClone(url string) error {
 	return err
 }
 
-// uncomments a line containing all the phrases from a file that uses the prefix for commenting
+// uncomments a line containing at least one of each phrase from a file that uses the prefix for commenting
 func UncommentLine(filePath, prefix string, phrases ...string) error {
-    file, err := os.Open(filePath)
+    file, err := os.Open(fp.Clean(filePath))
     if err != nil {
         return err
     }
-	defer func() {_ = file.Close()}()
+	defer file.Close()
 
     var lines []string
     scanner := bufio.NewScanner(file)
@@ -224,7 +221,7 @@ func AddUserToSudo(username string) {
 
 func CreateAccount(userName, userPW string) {
 	Run("useradd", "-m", userName)
-	if !RunI(userPW+"\n"+userPW, "passwd", userName).Success {CritError()}
+	if !RunP(RunFlags{}, userPW+"\n"+userPW, "passwd", userName).Success {CritError()}
 	AddUserToSudo(userName)
 	HomeDir = GetHomeDir(userName)
 }
@@ -276,7 +273,7 @@ func CheckAndFixFstab() {
 		CritError("Error no devices given")
 	}
 	for _, elm := range dev {
-		out := Run("blkid", "-s", "UUID", "-o", "value", elm, "-F noStdout")
+		out := RunS("blkid", "-s", "UUID", "-o", "value", elm)
 		if !out.Success {
 			continue
 		}
@@ -292,6 +289,7 @@ func CheckAndFixFstab() {
 			}
 		}
 
+		//nolint:gosec
 		if err := os.WriteFile("/etc/fstab", []byte(strings.Join(lines, "\n")), 0644); err != nil {
 			CritError(err)
 		}
@@ -302,13 +300,17 @@ func InstallyayPackages(userName string) {
 	Run("chown", "-R", userName+":"+userName, HomeDir)
 	if !Run("pacman", "-Q", "|", "grep", "-q", `"yay"`).Success {
 		if !Find("yay-bin") {
+			Cd(HomeDir)
 			FuncAs(userName, func(){_ = GitClone("https://aur.archlinux.org/yay-bin.git")})
 		}
 		Cd("yay-bin")
 		Run(RunAs(userName, "makepkg", "-si", "--noconfirm")...)
-		Cd("..")
+		Cd(RepoLocation)
 	}
-	Run(Xargs(AurPkgsLoc, RunAs(userName, "yay", "-Sy", "--noconfirm", "-F noStdout")...)...)
+	err := Run(Xargs(AurPkgsLoc, RunAs(userName, "yay", "-Sy", "--noconfirm")...)...).Error 
+	if err != nil {
+		CritError(err)
+	}
 }
 
 func ChrootSetup(userName, rootPass, userPW, hostName string) {
@@ -320,10 +322,10 @@ func ChrootSetup(userName, rootPass, userPW, hostName string) {
 
 	MkFileWithText("LANG=en_US.UTF-8", "/etc/locale.conf")
 	MkFileWithText("KEYMAP=us", "/etc/vconsole.conf")
-	MkFileWithText("en_US.UTF-8 UTF-8", "/etc/locale.gen")
-	Run("locale-gen")
+	if err := UncommentLine("/etc/locale.gen", "#", "en_US.UTF-8"); err != nil {CritError(err)}
+	if err := Run("locale-gen").Error; err != nil {CritError(err)}
 
-	if !RunI(rootPass+"\n"+rootPass, "passwd").Success {CritError()}
+	if !RunP(RunFlags{}, rootPass+"\n"+rootPass, "passwd").Success {CritError()}
 
 	Run("systemctl", "enable", "NetworkManager")
 	Run("systemctl", "enable", "gdm")
@@ -355,6 +357,7 @@ func ExtraPackages(userName string) {
 
 	InstallyayPackages(userName)
 
+	Cd(HomeDir)
 	if !Find("castle-shell") {
 		var err error
 		FuncAs(userName, func(){err = GitClone("https://github.com/KCkingcollin/castle-shell")})
@@ -363,8 +366,12 @@ func ExtraPackages(userName string) {
 		}
 	}
 	Cd("castle-shell/color-checker")
-	Run("go", "build", "-o", "/usr/bin/color-checker")
-	Cd("../..")
+	Run("go", "env", "-w", "GOFLAGS=-buildvcs=false")
+	err := Run("go", "build", "-o", "/usr/bin/color-checker").Error
+	if err != nil {
+		CritError(err)
+	}
+	Cd(RepoLocation)
 
 	Run("flatpak", "override", "--filesystem="+fp.Join(HomeDir, ".themes"))
 	Run("flatpak", "override", "--filesystem="+fp.Join(HomeDir, ".icons"))
@@ -441,12 +448,8 @@ func ConfigSetup(userName string) {
 	Run("chown", "-R", "root:root", "/root")
 
 	Run("fc-cache", "-rv")
-	Run(RunAs(userName, "gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", "\"Adwaita-dark\"")...)
-	Run(RunAs(userName, "gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "\"prefer-dark\"")...)
-	Run("gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", "\"Adwaita-dark\"")
-	Run("gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "\"prefer-dark\"")
 
-	Run("rate-mirrors", "--allow-root", "--save", "/etc/pacman.d/mirrorlist", "arch", "-F noStdout")
+	RunS("rate-mirrors", "--allow-root", "--save", "/etc/pacman.d/mirrorlist", "arch")
 
 	MkFileWithText(
 		"[User]\n"+

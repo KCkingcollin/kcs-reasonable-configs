@@ -1,7 +1,9 @@
 package main
 
 import (
-	"Install/lib"
+	. "Install/lib"
+	. "unix-shell"
+	at "auto-testing/lib"
 	"bytes"
 	"flag"
 	"fmt"
@@ -43,11 +45,11 @@ func (b *safeBuf) String() string {
 func testCleanup(t testing.TB) {
     t.Helper()
 
-	if lib.InChroot() {
-		lib.EscapeChroot(MainRootFD)
+	if InChroot() {
+		EscapeChroot(MainRootFD)
 	}
-    lib.Run("swapoff", "-a")
-    lib.Umount(MntLoc)
+    Run("swapoff", "-a")
+    Umount(MntLoc)
 
     if t.Failed() {
         t.Logf("=== logs ===\n%s", logBuffer.String())
@@ -55,7 +57,7 @@ func testCleanup(t testing.TB) {
 }
 
 func TestMountAndInstall(t *testing.T) {
-	lib.MustContain(t)
+	at.MustContain(t)
 	defer func() {
 		if r := recover(); r != nil {
 			t.Logf("=== logs (cleanup panic) ===\n%s", logBuffer.String())
@@ -64,10 +66,10 @@ func TestMountAndInstall(t *testing.T) {
 	}()
 	logBuffer.Reset()
 
-	diskNum := lib.MountRawDisk(lib.RawDiskLocation)
-	t.Cleanup(func(){lib.UmountRawDisk(diskNum)})
+	diskNum := at.MountRawDisk(at.RawDiskLocation)
+	t.Cleanup(func(){at.UmountRawDisk(diskNum)})
 
-	if err := lib.CreatePartitions(diskNum); err != nil {
+	if err := at.CreatePartitions(diskNum); err != nil {
 		t.Fatal(err)
 	}
 
@@ -77,10 +79,10 @@ func TestMountAndInstall(t *testing.T) {
 		replaceRepos: 	true,
 		autoMount: 		true,
 		part: 			partitions{
-			boot: 			lib.LoopDevices[diskNum]+"p1",
-			root: 			lib.LoopDevices[diskNum]+"p2",
-			home: 			lib.LoopDevices[diskNum]+"p3",
-			swap: 			lib.LoopDevices[diskNum]+"p4",
+			boot: 			at.LoopDevices[diskNum]+"p1",
+			root: 			at.LoopDevices[diskNum]+"p2",
+			home: 			at.LoopDevices[diskNum]+"p3",
+			swap: 			at.LoopDevices[diskNum]+"p4",
 		},
 		rootPW: 		"testPass",
 		userName: 		"testuser",
@@ -88,62 +90,62 @@ func TestMountAndInstall(t *testing.T) {
 		machineName: 	"testev",
 	}
 
-	MainRootFD = lib.GetRootFD()
+	MainRootFD = GetRootFD()
 	t.Cleanup(func(){testCleanup(t)})
 
-	lib.SetupSudoersFile()
+	SetupSudoersFile()
 	install()
 }
 
 func TestInstallFromChroot(t *testing.T) {
-    defer func() {
-        if r := recover(); r != nil {
-            t.Logf("=== logs (cleanup panic) ===\n%s", logBuffer.String())
-            panic(r)
-        }
-    }()
-	lib.MustContain(t)
+	at.MustContain(t)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Logf("=== logs (cleanup panic) ===\n%s", logBuffer.String())
+			panic(r)
+		}
+	}()
 	logBuffer.Reset()
 
-	lib.Run("lsblk")
-	diskNum := lib.MountRawDisk(lib.RawDiskLocation)
-	t.Cleanup(func(){lib.UmountRawDisk(diskNum)})
+	diskNum := at.MountRawDisk(at.RawDiskLocation)
+	t.Cleanup(func(){at.UmountRawDisk(diskNum)})
 
-	if err := lib.CreatePartitions(diskNum); err != nil {
+	if err := at.CreatePartitions(diskNum); err != nil {
 		t.Fatal(err)
 	}
 
-	lib.MountThePartitions(diskNum)
+	TestUserName := "testuser"
+	at.MountThePartitions(diskNum, MntLoc, TestUserName)
 
 	userInput = options{}
 	userInput = options{
 		replaceRepos: 	true,
 		rootPW: 		"testPass",
-		userName: 		"testuser",
+		userName: 		TestUserName,
 		userPW: 		"testPass",
 		machineName: 	"testev",
 	}
 
-	lib.Run("pacstrap", "-c", MntLoc, "base")
-	MainRootFD = lib.GetRootFD()
+	Run("pacstrap", "-c", MntLoc, "base")
+	MainRootFD = GetRootFD()
 
-	escape := lib.Chroot(lib.MntLoc)
+	escape := Chroot(MntLoc)
 
 	t.Cleanup(func(){testCleanup(t)})
-	lib.SetupSudoersFile()
+	SetupSudoersFile()
 	install()
 
 	t.Cleanup(escape)
 }
 
 func TestInstallToEnvNewUser(t *testing.T) {
-    defer func() {
-        if r := recover(); r != nil {
-            t.Logf("=== logs (cleanup panic) ===\n%s", logBuffer.String())
-            panic(r)
-        }
-    }()
-	lib.MustContain(t)
+	at.MustContain(t)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Logf("=== logs (cleanup panic) ===\n%s", logBuffer.String())
+			panic(r)
+		}
+	}()
 	logBuffer.Reset()
 
 	userInput = options{}
@@ -155,21 +157,21 @@ func TestInstallToEnvNewUser(t *testing.T) {
 		machineName: 	"testev",
 	}
 
-	MainRootFD = lib.GetRootFD()
+	MainRootFD = GetRootFD()
 	t.Cleanup(func(){testCleanup(t)})
 
-	lib.SetupSudoersFile()
+	SetupSudoersFile()
 	install()
 }
 
 func TestInstallToEnvOldUser(t *testing.T) {
-    defer func() {
-        if r := recover(); r != nil {
-            t.Logf("=== logs (cleanup panic) ===\n%s", logBuffer.String())
-            panic(r)
-        }
-    }()
-	lib.MustContain(t)
+	at.MustContain(t)
+	defer func() {
+		if r := recover(); r != nil {
+			t.Logf("=== logs (cleanup panic) ===\n%s", logBuffer.String())
+			panic(r)
+		}
+	}()
 	logBuffer.Reset()
 
 	userInput = options{}
@@ -181,17 +183,17 @@ func TestInstallToEnvOldUser(t *testing.T) {
 		machineName: 	"testev",
 	}
 
-	MainRootFD = lib.GetRootFD()
+	MainRootFD = GetRootFD()
 	t.Cleanup(func(){testCleanup(t)})
 
-	lib.SetupSudoersFile()
+	SetupSudoersFile()
 	install()
 }
 
-func TestMain(m *testing.M) {
+func startup(m *testing.M) int {
 	defer func(){
-		for i := range lib.LoopDevices {
-			lib.UmountRawDisk(i)
+		for i := range at.LoopDevices {
+			at.UmountRawDisk(i)
 		}
 	}()
 	sigChan := make(chan os.Signal, 1)
@@ -201,7 +203,7 @@ func TestMain(m *testing.M) {
 		fmt.Println("got a signal")
 		if sig != nil {
 			fmt.Println("crit")
-			lib.CritError("Test was stooped")
+			CritError("Test was stooped")
 		}
 	}()
 	flag.Parse()
@@ -212,8 +214,9 @@ func TestMain(m *testing.M) {
 		output = &logBuffer
 	}
 	log.SetOutput(output)
-	lib.RepoLocation = lib.Pwd()
-	lib.MntLoc = MntLoc
-	exitCode := m.Run()
-	os.Exit(exitCode)
+	return m.Run()
+}
+
+func TestMain(m *testing.M) {
+	os.Exit(startup(m))
 }
