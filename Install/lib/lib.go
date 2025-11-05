@@ -223,11 +223,13 @@ func CreateAccount(userName, userPW string) {
 	Run("useradd", "-m", userName)
 	if !RunP(RunFlags{}, userPW+"\n"+userPW, "passwd", userName).Success {CritError()}
 	AddUserToSudo(userName)
+	Run("usermod", "-aG", "realtime", userName)
 	HomeDir = GetHomeDir(userName)
 }
 
 func GetAccount(userName string) {
 	AddUserToSudo(userName)
+	Run("usermod", "-aG", "realtime", userName)
 	HomeDir = GetHomeDir(userName)
 }
 
