@@ -24,6 +24,19 @@ require('cmp_nvim_lsp').setup({
   snippet_expansion = true,
 })
 
+vim.lsp.config.gopls = {
+  cmd = { 'gopls' },
+  filetypes = { 'go', 'gomod', 'gowork', 'gotmpl' },
+  root_markers = { 'go.work', 'go.mod', '.git' },
+  settings = {
+    gopls = {
+      analyses = {
+        unsafeptr = false,
+      },
+    },
+  },
+}
+
 require('mason').setup({})
 require('mason-lspconfig').setup({
     ensure_installed = {'bashls', 'lua_ls', 'glslls'},

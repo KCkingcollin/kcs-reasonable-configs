@@ -88,3 +88,5 @@ xorg-fonts-encodings
 qt5ct
 qt6ct
 realtime-privileges
+hyprlock
+hypridle
