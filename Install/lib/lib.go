@@ -454,12 +454,10 @@ func ConfigSetup(userName string) {
 	RunS("rate-mirrors", "--allow-root", "--save", "/etc/pacman.d/mirrorlist", "arch")
 
 	MkFileWithText(
-		"[User]\n"+
-		"Session=hyprland\n"+
-		"XSession=hyprland\n"+
-		"Icon="+userName+"/.face\n"+
-		"SystemAccount=false\n",
-		"/var/lib/AccountsService/users/"+userName, 
+		"[Autologin]\n"+
+		"User="+userName+"\n"+
+		"Session=hyprland\n",
+		"/etc/sddm.conf.d/autologin.conf", 
 	)
 
 	log.Println("\033[32m\nConfigs Installed\033[0m")

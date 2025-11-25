@@ -35,7 +35,6 @@ nemo
 rofi-wayland
 neovim
 kitty
-gdm
 cpio
 meson
 cmake
@@ -90,3 +89,4 @@ qt6ct
 realtime-privileges
 hyprlock
 hypridle
+sddm
