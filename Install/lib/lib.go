@@ -330,7 +330,7 @@ func ChrootSetup(userName, rootPass, userPW, hostName string) {
 	if !RunP(RunFlags{}, rootPass+"\n"+rootPass, "passwd").Success {CritError()}
 
 	Run("systemctl", "enable", "NetworkManager")
-	Run("systemctl", "enable", "gdm")
+	Run("systemctl", "enable", "sddm")
 	Run("systemctl", "enable", "cronie")
 
 	Run("pacman", "-Syu", "--noconfirm")
