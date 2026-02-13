@@ -444,3 +444,6 @@ export TERM=xterm-256color
 
 export GOPATH=$HOME/go
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin:/usr/lib
+
+# Created by `pipx` on 2026-02-09 00:22:53
+export PATH="$PATH:/home/kckingcollin/.local/bin"
