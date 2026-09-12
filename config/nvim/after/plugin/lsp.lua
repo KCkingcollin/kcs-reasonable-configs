@@ -38,9 +38,7 @@ vim.lsp.config.gopls = {
 }
 
 require('mason').setup({})
-require('mason-lspconfig').setup({
-    ensure_installed = {'bashls', 'lua_ls', 'glslls'},
-})
+require('mason-lspconfig').setup({})
 
 vim.lsp.config(
     "lua_ls", {
