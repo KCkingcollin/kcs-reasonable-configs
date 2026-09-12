@@ -422,8 +422,8 @@ func ConfigSetup(userName string) {
 	FuncAs(userName, func(){Mkdir(fp.Join(HomeDir,"/.config"))})
 	Cp("config/*", fp.Join(HomeDir, "/.config")+"/")
 	Cp("./.zshrc", "./.themes", "./.icons", "./.gtkrc-2.0", HomeDir+"/")
-	Mv(fp.Join(HomeDir, "/.config/hypr/hyprland.conf"), fp.Join(HomeDir, "/.config/hypr/hyprland.conf.bak"))
-	Cp("./hyprland.conf.once", fp.Join(HomeDir, "/.config/hypr/hyprland.conf"))
+	Mv(fp.Join(HomeDir, "/.config/hypr/hyprland.lua"), fp.Join(HomeDir, "/.config/hypr/hyprland.lua.bak"))
+	Cp("./hyprland.lua.once", fp.Join(HomeDir, "/.config/hypr/hyprland.lua"))
 
 	Mkdir("/root/.config")
     Cp("config/*", "/root/.config/")

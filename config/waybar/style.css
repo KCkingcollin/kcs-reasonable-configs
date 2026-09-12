@@ -58,6 +58,10 @@ label:focus {
     background-color: #000000;
 }
 
+#custom-menu {
+    font-size: 13px;
+}
+
 #language {
     margin-left: 4px;
 }

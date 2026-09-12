@@ -80,6 +80,12 @@ require("lazy").setup({
         },
         {'filNaj/tree-setter'},
         {'saifulapm/commasemi.nvim'},
+        {
+            "mkusm/nvim-papyrus",
+            config = function()
+                vim.g.skyrim_install_path = '/home/kckingcollin/.steam/steam/steamapps/common/Skyrim Special Edition'
+            end
+        },
         { import = "plugins" },
     },
     -- Configure any other settings here. See the documentation for more details.

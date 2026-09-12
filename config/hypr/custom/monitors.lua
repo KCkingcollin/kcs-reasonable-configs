@@ -1,0 +1,11 @@
+-- ──────────────── MONITOR DEFAULT CONFIGURATION ────────────────
+-- This file provides default monitor settings.
+-- When nwg-displays is active, it will override this file with its own monitors.lua
+
+-- hl.monitor({ name = ", preferred", resolution = "auto", scale = 1 })
+--
+-- hl.config({
+--     xwayland = {
+--         force_zero_scaling = true,
+--     },
+-- })
